@@ -1,0 +1,38 @@
+name: BaseCheck Monitor
+
+on:
+  schedule:
+    # Toutes les 10 minutes (GitHub Actions minimum = 5 min)
+    - cron: "*/10 * * * *"
+  workflow_dispatch:   # Permet de lancer manuellement depuis GitHub si besoin
+
+permissions:
+  contents: write      # Autorisation d'écrire dans le repo (commit log.json)
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Cloner le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1       # Juste le dernier commit, rapide
+
+      - name: Configurer Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Vérifier la base NTRIP
+        run: python check.py
+
+      - name: Commiter et pousser le journal mis à jour
+        run: |
+          git config user.name  "BaseCheck Bot"
+          git config user.email "basecheck-bot@noreply.github.com"
+          git add data/log.json
+          # Ne commite que s'il y a une modification
+          git diff --cached --quiet || git commit -m "check: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

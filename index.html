@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BaseCheck — Surveillance NTRIP</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    header .subtitle {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+    .dot-header {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 8px;
+      background: #64748b;
+    }
+
+    /* ── Status card ── */
+    .current-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #1a1f2e;
+      border: 1px solid #2a2e3d;
+      border-radius: 16px;
+      padding: 20px 28px;
+      max-width: 520px;
+      margin: 0 auto 32px;
+    }
+    .status-dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.green  { background: #22c55e; box-shadow: 0 0 12px #22c55e88; }
+    .status-dot.red    { background: #ef4444; box-shadow: 0 0 12px #ef444488; }
+    .status-dot.orange { background: #f97316; box-shadow: 0 0 12px #f9731688; }
+    .status-dot.gray   { background: #475569; }
+
+    .status-label { font-size: 1.1rem; font-weight: 600; }
+    .status-time  { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      max-width: 720px;
+      margin: 0 auto 28px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 140px;
+      background: #1a1f2e;
+      border: 1px solid #2a2e3d;
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .stat-card .val { font-size: 1.6rem; font-weight: 700; }
+    .stat-card .lbl { font-size: 0.72rem; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .val.green  { color: #22c55e; }
+    .val.red    { color: #ef4444; }
+    .val.orange { color: #f97316; }
+
+    /* ── Section titre ── */
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Timeline bar 24h ── */
+    .timeline-wrap {
+      max-width: 720px;
+      margin: 0 auto 32px;
+      background: #1a1f2e;
+      border: 1px solid #2a2e3d;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .timeline-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+    .timeline-bar {
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      background: #0f1117;
+    }
+    .bar-seg {
+      height: 100%;
+      transition: flex 0.3s;
+    }
+    .bar-seg.online  { background: #22c55e; }
+    .bar-seg.offline { background: #ef4444; }
+    .bar-seg.nonet   { background: #f97316; }
+    .bar-seg.unknown { background: #1e293b; }
+
+    /* ── Table journalière ── */
+    .days-table {
+      max-width: 720px;
+      margin: 0 auto 32px;
+      background: #1a1f2e;
+      border: 1px solid #2a2e3d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      background: #131720;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #2a2e3d;
+    }
+    tbody tr { border-bottom: 1px solid #1e2536; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 14px; font-size: 0.85rem; vertical-align: top; }
+    tbody tr:hover { background: #1e2537; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-green  { background: #14532d; color: #4ade80; }
+    .badge-red    { background: #7f1d1d; color: #f87171; }
+    .badge-orange { background: #7c2d12; color: #fb923c; }
+
+    .event-list { list-style: none; }
+    .event-list li { padding: 2px 0; font-size: 0.8rem; }
+    .ev-on  { color: #4ade80; }
+    .ev-off { color: #f87171; }
+    .ev-net { color: #fb923c; }
+    .ev-ts  { color: #64748b; font-size: 0.74rem; margin-right: 6px; }
+
+    /* ── Uptime circle (petite barre) ── */
+    .uptime-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .uptime-track {
+      flex: 1;
+      height: 6px;
+      background: #2a2e3d;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .uptime-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #22c55e;
+    }
+    .uptime-pct { font-size: 0.78rem; color: #94a3b8; width: 38px; text-align: right; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: #334155;
+      font-size: 0.75rem;
+      margin-top: 20px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .stats-row { flex-direction: column; }
+      header h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span class="dot-header" id="headerDot"></span>Base Check</h1>
+  <p class="subtitle">Surveillance NTRIP automatique — Mis à jour toutes les 10 minutes</p>
+</header>
+
+<!-- Statut actuel -->
+<div class="current-status">
+  <div class="status-dot gray" id="currentDot"></div>
+  <div>
+    <div class="status-label" id="currentLabel">Chargement…</div>
+    <div class="status-time"  id="currentTime"></div>
+  </div>
+</div>
+
+<!-- Statistiques 7 jours -->
+<div class="section-title" id="statsTitle">Statistiques — 7 derniers jours</div>
+<div class="stats-row">
+  <div class="stat-card"><div class="val green" id="statUptime">—</div><div class="lbl">Uptime moyen</div></div>
+  <div class="stat-card"><div class="val red"   id="statCoupures">—</div><div class="lbl">Coupures (7j)</div></div>
+  <div class="stat-card"><div class="val"        id="statDuree">—</div><div class="lbl">Durée moy. coupure</div></div>
+  <div class="stat-card"><div class="val"        id="statChecks">—</div><div class="lbl">Vérifications totales</div></div>
+</div>
+
+<!-- Timeline 24 heures -->
+<div class="section-title">Disponibilité — Dernières 24 heures</div>
+<div class="timeline-wrap">
+  <div class="timeline-label"><span>–24h</span><span>–18h</span><span>–12h</span><span>–6h</span><span>Maintenant</span></div>
+  <div class="timeline-bar" id="timelineBar"></div>
+</div>
+
+<!-- Tableau par jour -->
+<div class="section-title">Historique journalier</div>
+<div class="days-table">
+  <table>
+    <thead>
+      <tr>
+        <th>Jour</th>
+        <th>Uptime</th>
+        <th>Allumages / Extinctions</th>
+      </tr>
+    </thead>
+    <tbody id="daysBody">
+      <tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Chargement du journal…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer id="footer">—</footer>
+
+<script>
+// ── Helpers ────────────────────────────────────────────────────────────
+const STATUS_LABEL = {
+  ONLINE:       "Base en ligne",
+  BASE_OFFLINE: "Base hors-ligne",
+  NO_INTERNET:  "Pas d'accès Internet",
+};
+const STATUS_COLOR = {
+  ONLINE: "green", BASE_OFFLINE: "red", NO_INTERNET: "orange",
+};
+
+function fmtUTCLocal(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+function fmtDateLocal(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("fr-FR", { weekday:"long", day:"2-digit", month:"long" });
+}
+function minutesBetween(a, b) {
+  return (new Date(b) - new Date(a)) / 60000;
+}
+function fmtDuration(minutes) {
+  const m = Math.round(minutes);
+  if (m < 60) return m + " min";
+  const h = Math.floor(m / 60), rm = m % 60;
+  return h + "h" + (rm ? rm + "m" : "");
+}
+// Clé de regroupement par jour LOCAL
+function dayKey(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("fr-FR", { year:"numeric", month:"2-digit", day:"2-digit" });
+}
+// Libellé jour court
+function dayLabel(isoStr) {
+  const d = new Date(isoStr);
+  const today    = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  if (dayKey(d.toISOString()) === dayKey(today.toISOString()))     return "Aujourd'hui";
+  if (dayKey(d.toISOString()) === dayKey(yesterday.toISOString())) return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday:"short", day:"2-digit", month:"short" });
+}
+
+// ── Charge le log.json ─────────────────────────────────────────────────
+async function loadLog() {
+  const resp = await fetch("data/log.json?t=" + Date.now());
+  if (!resp.ok) throw new Error("Impossible de charger log.json");
+  return resp.json();
+}
+
+// ── Analyse les données ────────────────────────────────────────────────
+function analyze(entries) {
+  if (!entries.length) return null;
+
+  // Statut actuel (dernière entrée)
+  const last = entries[entries.length - 1];
+
+  // Fenêtre 24h
+  const now    = new Date();
+  const ago24h = new Date(now - 24*3600*1000);
+  const last24 = entries.filter(e => new Date(e.timestamp) >= ago24h);
+
+  // Fenêtre 7 jours
+  const ago7d  = new Date(now - 7*24*3600*1000);
+  const last7d = entries.filter(e => new Date(e.timestamp) >= ago7d);
+
+  // Uptime 7j
+  const onlineCount7d = last7d.filter(e => e.status === "ONLINE").length;
+  const uptime7d = last7d.length ? Math.round(100 * onlineCount7d / last7d.length) : 0;
+
+  // Nombre de coupures 7j (transitions vers BASE_OFFLINE ou NO_INTERNET)
+  let coupures = 0;
+  let totalCoupureMin = 0;
+  let inCoupure = false;
+  let coupureStart = null;
+  for (const e of last7d) {
+    const isDown = e.status !== "ONLINE";
+    if (isDown && !inCoupure) { inCoupure = true; coupureStart = e.timestamp; coupures++; }
+    if (!isDown &&  inCoupure) {
+      inCoupure = false;
+      totalCoupureMin += minutesBetween(coupureStart, e.timestamp);
+    }
+  }
+  const avgCoupureMin = coupures ? totalCoupureMin / coupures : 0;
+
+  // ── Regroupement par jour ──────────────────────────────────────────
+  // Trouver tous les jours dans les données
+  const daysMap = {};
+  for (const e of entries) {
+    const k = dayKey(e.timestamp);
+    if (!daysMap[k]) daysMap[k] = { key: k, label: dayLabel(e.timestamp), entries: [] };
+    daysMap[k].entries.push(e);
+  }
+
+  // Pour chaque jour : calculer uptime + liste d'événements (allumages / extinctions)
+  const days = Object.values(daysMap).reverse(); // Plus récent en premier
+  const daysData = days.map(day => {
+    const es = day.entries;
+    const onlineN = es.filter(e => e.status === "ONLINE").length;
+    const uptime  = Math.round(100 * onlineN / es.length);
+
+    // Détecter les transitions dans la journée
+    const events = [];
+    for (let i = 0; i < es.length; i++) {
+      const prev = i > 0 ? es[i-1] : null;
+      const cur  = es[i];
+      if (!prev) continue;
+      // Allumage : précédent était hors-ligne, courant est ONLINE
+      if (prev.status !== "ONLINE" && cur.status === "ONLINE") {
+        events.push({ type: "ON", time: cur.timestamp });
+      }
+      // Extinction : précédent était ONLINE, courant est hors-ligne
+      if (prev.status === "ONLINE" && cur.status !== "ONLINE") {
+        events.push({ type: "OFF", time: cur.timestamp, reason: cur.status });
+      }
+    }
+    return { ...day, uptime, events };
+  });
+
+  // ── Segments timeline 24h ──────────────────────────────────────────
+  const totalSlots = last24.length || 1;
+  const timeline = last24.map(e => e.status);
+
+  return { last, uptime7d, coupures, avgCoupureMin, totalChecks: entries.length, daysData, timeline };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────
+function render(data) {
+  const { last, uptime7d, coupures, avgCoupureMin, totalChecks, daysData, timeline } = data;
+
+  // Statut actuel
+  const color = STATUS_COLOR[last.status] || "gray";
+  document.getElementById("currentDot").className  = "status-dot " + color;
+  document.getElementById("headerDot").style.background =
+    color === "green" ? "#22c55e" : color === "red" ? "#ef4444" : color === "orange" ? "#f97316" : "#475569";
+  document.getElementById("currentLabel").textContent = STATUS_LABEL[last.status] || last.status;
+  document.getElementById("currentTime").textContent  =
+    "Dernière vérification : " + new Date(last.timestamp).toLocaleString("fr-FR");
+
+  // Stats
+  document.getElementById("statUptime").textContent  = uptime7d + "%";
+  document.getElementById("statCoupures").textContent = coupures;
+  document.getElementById("statDuree").textContent    = avgCoupureMin ? fmtDuration(avgCoupureMin) : "—";
+  document.getElementById("statChecks").textContent   = totalChecks;
+
+  // Timeline 24h
+  const bar = document.getElementById("timelineBar");
+  bar.innerHTML = "";
+  if (timeline.length === 0) {
+    const seg = document.createElement("div");
+    seg.className = "bar-seg unknown";
+    seg.style.flex = "1";
+    bar.appendChild(seg);
+  } else {
+    // Grouper les segments consécutifs identiques
+    let segs = [];
+    let cur = { status: timeline[0], count: 1 };
+    for (let i = 1; i < timeline.length; i++) {
+      if (timeline[i] === cur.status) cur.count++;
+      else { segs.push(cur); cur = { status: timeline[i], count: 1 }; }
+    }
+    segs.push(cur);
+    for (const s of segs) {
+      const div = document.createElement("div");
+      div.style.flex = s.count;
+      div.title = STATUS_LABEL[s.status] || s.status;
+      div.className = "bar-seg " +
+        (s.status === "ONLINE" ? "online" : s.status === "BASE_OFFLINE" ? "offline" : "nonet");
+      bar.appendChild(div);
+    }
+  }
+
+  // Tableau journalier
+  const tbody = document.getElementById("daysBody");
+  tbody.innerHTML = "";
+  if (!daysData.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Aucune donnée</td></tr>';
+    return;
+  }
+  for (const d of daysData) {
+    const tr = document.createElement("tr");
+
+    // Colonne jour
+    const tdDay = document.createElement("td");
+    tdDay.style.fontWeight = "600";
+    tdDay.textContent = d.label;
+    tr.appendChild(tdDay);
+
+    // Colonne uptime
+    const tdUp = document.createElement("td");
+    tdUp.innerHTML = `
+      <div class="uptime-bar">
+        <div class="uptime-track"><div class="uptime-fill" style="width:${d.uptime}%"></div></div>
+        <div class="uptime-pct">${d.uptime}%</div>
+      </div>`;
+    tr.appendChild(tdUp);
+
+    // Colonne événements
+    const tdEv = document.createElement("td");
+    if (d.events.length === 0) {
+      tdEv.innerHTML = '<span style="color:#475569;font-size:0.78rem">Aucun changement enregistré</span>';
+    } else {
+      const ul = document.createElement("ul");
+      ul.className = "event-list";
+      for (const ev of d.events) {
+        const li = document.createElement("li");
+        const ts = `<span class="ev-ts">${fmtUTCLocal(ev.time)}</span>`;
+        if (ev.type === "ON") {
+          li.innerHTML = ts + '<span class="ev-on">▲ Allumage</span>';
+        } else {
+          const reason = ev.reason === "NO_INTERNET" ? " (réseau)" : "";
+          li.innerHTML = ts + '<span class="ev-off">▼ Extinction' + reason + '</span>';
+        }
+        ul.appendChild(li);
+      }
+      tdEv.appendChild(ul);
+    }
+    tr.appendChild(tdEv);
+
+    tbody.appendChild(tr);
+  }
+
+  // Footer
+  document.getElementById("footer").textContent =
+    "BaseCheck · Données en UTC · Mis à jour automatiquement · " +
+    new Date().toLocaleString("fr-FR");
+}
+
+// ── Point d'entrée ──────────────────────────────────────────────────────
+(async () => {
+  try {
+    const entries = await loadLog();
+    if (!entries.length) {
+      document.getElementById("currentLabel").textContent = "Aucune donnée encore";
+      document.getElementById("daysBody").innerHTML =
+        '<tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Aucune vérification effectuée pour l\'instant.<br>Le système se lancera automatiquement dans quelques minutes.</td></tr>';
+      return;
+    }
+    const data = analyze(entries);
+    render(data);
+  } catch(e) {
+    document.getElementById("currentLabel").textContent = "Erreur de chargement";
+    document.getElementById("currentTime").textContent  = e.message;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
