@@ -218,7 +218,6 @@
     <h1><span class="dot-header" id="headerDot"></span>Base Check</h1>
     <p class="subtitle">Surveillance NTRIP automatique</p>
     <div class="header-actions">
-      <button class="logout-btn" onclick="openConfigModal()">⚙️ Config</button>
       <button class="logout-btn" onclick="logout()">🔒 Verrouiller</button>
     </div>
   </header>
@@ -240,27 +239,6 @@
   </div>
 
   <footer id="footer">—</footer>
-</div>
-
-<!-- ══ MODAL CONFIGURATION SUPABASE ══ -->
-<div id="configModal" class="modal-overlay">
-  <div class="lock-card" style="max-width: 440px; text-align: left;">
-    <h2 style="margin-bottom: 6px;">⚙️ Base de données privée</h2>
-    <p style="margin-bottom: 16px; font-size: 0.8rem; color: #94a3b8;">
-      Vos paramètres restent stockés <strong>uniquement sur votre appareil</strong> (jamais visibles sur GitHub).
-    </p>
-
-    <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px;">Supabase Project URL</label>
-    <input type="text" id="cfgSbUrl" class="lock-input" placeholder="https://xyz.supabase.co" />
-
-    <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px;">Supabase Anon Public Key</label>
-    <input type="password" id="cfgSbKey" class="lock-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
-
-    <div style="display: flex; gap: 10px; margin-top: 8px;">
-      <button class="lock-btn" onclick="saveConfig()">Enregistrer</button>
-      <button class="lock-btn" style="background: #334155;" onclick="closeConfigModal()">Fermer</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -312,29 +290,7 @@ async function checkAutoUnlock() {
 }
 document.getElementById("pwdInput").addEventListener("keydown", e => { if (e.key==="Enter") tryUnlock(); });
 
-// ══════════════════════════════════════════
-//  CONFIGURATION SUPABASE MODAL
-// ══════════════════════════════════════════
-function openConfigModal() {
-  document.getElementById("cfgSbUrl").value = localStorage.getItem("basecheck_sb_url") || "";
-  document.getElementById("cfgSbKey").value = localStorage.getItem("basecheck_sb_key") || "";
-  document.getElementById("configModal").style.display = "flex";
-}
-function closeConfigModal() {
-  document.getElementById("configModal").style.display = "none";
-}
-function saveConfig() {
-  const url = document.getElementById("cfgSbUrl").value.trim();
-  const key = document.getElementById("cfgSbKey").value.trim();
-  if (url && key) {
-    localStorage.setItem("basecheck_sb_url", url);
-    localStorage.setItem("basecheck_sb_key", key);
-    closeConfigModal();
-    loadAndRender();
-  } else {
-    alert("Veuillez renseigner l'URL et la clé Supabase.");
-  }
-}
+
 
 // ══════════════════════════════════════════
 //  HELPERS & RENDU
@@ -520,19 +476,8 @@ function render(data) {
 //  CHARGEMENT DEPUIS SUPABASE
 // ══════════════════════════════════════════
 async function loadAndRender() {
-  const DEFAULT_SB_URL = "https://swrspopzrvlqeqgjrjnk.supabase.co";
-  const DEFAULT_SB_KEY = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
-
-  const sbUrl = localStorage.getItem("basecheck_sb_url") || DEFAULT_SB_URL;
-  const sbKey = localStorage.getItem("basecheck_sb_key") || DEFAULT_SB_KEY;
-
-  if (!sbUrl || !sbKey) {
-    document.getElementById("currentLabel").textContent = "Connexion requise";
-    document.getElementById("currentTime").textContent = "Cliquez sur ⚙️ Config pour renseigner vos identifiants Supabase.";
-    document.getElementById("calendarGrid").innerHTML =
-      '<div style="text-align:center;color:#94a3b8;padding:32px">Veuillez renseigner votre URL et clé Supabase via le bouton <strong>⚙️ Config</strong> en haut à droite.</div>';
-    return;
-  }
+  const sbUrl = "https://swrspopzrvlqeqgjrjnk.supabase.co";
+  const sbKey = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
 
   try {
     const url = `${sbUrl.replace(/\/+$/, "")}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=4500`;
