@@ -520,8 +520,11 @@ function render(data) {
 //  CHARGEMENT DEPUIS SUPABASE
 // ══════════════════════════════════════════
 async function loadAndRender() {
-  const sbUrl = localStorage.getItem("basecheck_sb_url");
-  const sbKey = localStorage.getItem("basecheck_sb_key");
+  const DEFAULT_SB_URL = "https://swrspopzrvlqeqgjrjnk.supabase.co";
+  const DEFAULT_SB_KEY = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
+
+  const sbUrl = localStorage.getItem("basecheck_sb_url") || DEFAULT_SB_URL;
+  const sbKey = localStorage.getItem("basecheck_sb_key") || DEFAULT_SB_KEY;
 
   if (!sbUrl || !sbKey) {
     document.getElementById("currentLabel").textContent = "Connexion requise";
