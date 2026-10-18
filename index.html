@@ -90,48 +90,30 @@
     .status-label { font-size: 1.05rem; font-weight: 600; }
     .status-time  { font-size: 0.76rem; color: #64748b; margin-top: 2px; }
 
-    /* ── Stats ── */
-    .stats-row {
-      display: flex; gap: 10px; max-width: 700px;
-      margin: 0 auto 28px; flex-wrap: wrap;
+    .refresh-btn {
+      background: #0f1117;
+      border: 1px solid #2a2e3d;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .stat-card {
-      flex: 1; min-width: 130px; background: #1a1f2e;
-      border: 1px solid #2a2e3d; border-radius: 11px;
-      padding: 13px 14px; text-align: center;
+    .refresh-btn:hover {
+      background: #1e2538;
+      color: #fff;
+      border-color: #3b82f6;
     }
-    .stat-card .val { font-size: 1.5rem; font-weight: 700; }
-    .stat-card .lbl {
-      font-size: 0.7rem; color: #64748b; margin-top: 4px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+    .refresh-btn:active {
+      transform: rotate(180deg);
     }
-    .val.green { color: #22c55e; }
-    .val.red   { color: #ef4444; }
 
-    /* ── Timeline 24h ── */
     .section-title {
       font-size: 0.85rem; font-weight: 600; color: #94a3b8;
       text-transform: uppercase; letter-spacing: 1px;
       margin: 0 auto 10px; max-width: 700px;
     }
-    .timeline-wrap {
-      max-width: 700px; margin: 0 auto 28px;
-      background: #1a1f2e; border: 1px solid #2a2e3d;
-      border-radius: 11px; padding: 14px;
-    }
-    .timeline-label {
-      display: flex; justify-content: space-between;
-      font-size: 0.68rem; color: #475569; margin-bottom: 6px;
-    }
-    .timeline-bar {
-      height: 24px; border-radius: 5px; overflow: hidden;
-      display: flex; background: #0f1117;
-    }
-    .bar-seg { height: 100%; }
-    .bar-seg.online  { background: #22c55e; }
-    .bar-seg.offline { background: #ef4444; }
-    .bar-seg.nonet   { background: #f97316; }
-    .bar-seg.unknown { background: #1e293b; }
 
     /* ══ CALENDRIER 3 MOIS ══ */
     .calendar-grid {
@@ -249,29 +231,14 @@
   <!-- Statut actuel -->
   <div class="current-status">
     <div class="status-dot gray" id="currentDot"></div>
-    <div>
+    <div style="flex: 1;">
       <div class="status-label" id="currentLabel">Chargement…</div>
       <div class="status-time"  id="currentTime"></div>
     </div>
+    <button class="refresh-btn" onclick="loadAndRender()" title="Rafraîchir les données">🔄 Actualiser</button>
   </div>
 
-  <!-- Stats 30 jours -->
-  <div class="section-title">Statistiques — 30 derniers jours</div>
-  <div class="stats-row">
-    <div class="stat-card"><div class="val green" id="statUptime">—</div><div class="lbl">Uptime moyen</div></div>
-    <div class="stat-card"><div class="val red"   id="statCoupures">—</div><div class="lbl">Coupures (30j)</div></div>
-    <div class="stat-card"><div class="val"        id="statDuree">—</div><div class="lbl">Durée moy. coupure</div></div>
-    <div class="stat-card"><div class="val"        id="statChecks">—</div><div class="lbl">Vérifications totales</div></div>
-  </div>
 
-  <!-- Timeline 24h -->
-  <div class="section-title">Disponibilité — Dernières 24 heures</div>
-  <div class="timeline-wrap">
-    <div class="timeline-label">
-      <span>–24h</span><span>–18h</span><span>–12h</span><span>–6h</span><span>Maintenant</span>
-    </div>
-    <div class="timeline-bar" id="timelineBar"></div>
-  </div>
 
   <!-- Calendrier 3 mois -->
   <div class="section-title">Calendrier — 3 derniers mois</div>
@@ -474,35 +441,6 @@ function render(data) {
   document.getElementById("currentLabel").textContent = LABEL[last.status] || last.status;
   document.getElementById("currentTime").textContent  =
     "Dernière vérification : " + new Date(last.timestamp).toLocaleString("fr-FR");
-
-  // Stats
-  document.getElementById("statUptime").textContent   = uptime30 + "%";
-  document.getElementById("statCoupures").textContent = coupures;
-  document.getElementById("statDuree").textContent    = avgCoup ? fmtDuration(avgCoup) : "—";
-  document.getElementById("statChecks").textContent   = totalChecks;
-
-  // Timeline 24h
-  const bar = document.getElementById("timelineBar");
-  bar.innerHTML = "";
-  if (!timeline.length) {
-    const seg = document.createElement("div");
-    seg.className = "bar-seg unknown"; seg.style.flex = "1";
-    bar.appendChild(seg);
-  } else {
-    let segs = [], cur = { s: timeline[0], n: 1 };
-    for (let i = 1; i < timeline.length; i++) {
-      if (timeline[i] === cur.s) cur.n++;
-      else { segs.push(cur); cur = { s: timeline[i], n: 1 }; }
-    }
-    segs.push(cur);
-    for (const s of segs) {
-      const div = document.createElement("div");
-      div.style.flex = s.n;
-      div.title = LABEL[s.s] || s.s;
-      div.className = "bar-seg " + (s.s==="ONLINE"?"online":s.s==="BASE_OFFLINE"?"offline":"nonet");
-      bar.appendChild(div);
-    }
-  }
 
   // ── Calendrier 3 mois ──
   const grid = document.getElementById("calendarGrid");
