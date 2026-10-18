@@ -93,13 +93,25 @@
     .status-label { font-size: 1.05rem; font-weight: 600; }
     .status-time  { font-size: 0.76rem; color: #64748b; margin-top: 2px; }
 
-    .refresh-btn {
-      background: #0f1117; border: 1px solid #2a2e3d; border-radius: 8px;
-      color: #94a3b8; font-size: 0.85rem; padding: 8px 12px;
-      cursor: pointer; transition: all 0.2s;
+    .status-btn-group {
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
     }
-    .refresh-btn:hover {
+    .action-btn {
+      background: #0f1117; border: 1px solid #2a2e3d; border-radius: 8px;
+      color: #94a3b8; font-size: 0.82rem; padding: 7px 11px;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .action-btn:hover {
       background: #1e2538; color: #fff; border-color: #3b82f6;
+    }
+    .action-btn.primary {
+      background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; font-weight: 600;
+    }
+    .action-btn.primary:hover {
+      background: #2563eb; color: #fff;
+    }
+    .action-btn:disabled {
+      opacity: 0.6; cursor: not-allowed;
     }
 
     .section-title {
@@ -229,7 +241,10 @@
       <div class="status-label" id="currentLabel">Chargement…</div>
       <div class="status-time"  id="currentTime"></div>
     </div>
-    <button class="refresh-btn" onclick="loadAndRender()" title="Rafraîchir les données">🔄 Actualiser</button>
+    <div class="status-btn-group">
+      <button class="action-btn" onclick="loadAndRender()" title="Rafraîchir les données enregistrées">🔄 Actualiser</button>
+      <button class="action-btn primary" id="btnTestNow" onclick="triggerImmediateCheck()" title="Lancer une vérification physique maintenant via le robot GitHub">⚡ Tester maintenant</button>
+    </div>
   </div>
 
   <!-- Calendrier 3 mois -->
@@ -501,6 +516,94 @@ async function loadAndRender() {
     document.getElementById("currentLabel").textContent = "Erreur Supabase";
     document.getElementById("currentTime").textContent  = e.message;
     console.error(e);
+  }
+}
+
+// ══════════════════════════════════════════
+//  TEST EN DIRECT VIA GITHUB ACTIONS
+// ══════════════════════════════════════════
+async function triggerImmediateCheck() {
+  let token = localStorage.getItem("basecheck_gh_token");
+  if (!token) {
+    token = prompt("Pour lancer un test physique immédiat, collez votre jeton GitHub (enregistré uniquement sur votre appareil) :");
+    if (!token) return;
+    token = token.trim();
+    localStorage.setItem("basecheck_gh_token", token);
+  }
+
+  const btn = document.getElementById("btnTestNow");
+  btn.disabled = true;
+  btn.innerHTML = "⏳ Lancement...";
+
+  try {
+    const url = "https://api.github.com/repos/hmlocal/basecheck-monitor/actions/workflows/monitor.yml/dispatches";
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ref: "main" })
+    });
+
+    if (resp.status === 401 || resp.status === 403) {
+      localStorage.removeItem("basecheck_gh_token");
+      alert("Jeton GitHub invalide ou permissions insuffisantes. Veuillez réessayer.");
+      btn.disabled = false;
+      btn.innerHTML = "⚡ Tester maintenant";
+      return;
+    }
+
+    if (!resp.ok && resp.status !== 204) {
+      throw new Error("Erreur GitHub (Code " + resp.status + ")");
+    }
+
+    btn.innerHTML = "⏳ Test en cours (~20s)...";
+    const startTime = Date.now();
+
+    // ID le plus élevé actuel
+    let maxId = 0;
+    try {
+      const r = await fetch("https://swrspopzrvlqeqgjrjnk.supabase.co/rest/v1/base_checks?select=id&order=id.desc&limit=1", {
+        headers: { "apikey": "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1" }
+      });
+      const d = await r.json();
+      if (d.length) maxId = d[0].id;
+    } catch(e) {}
+
+    // Vérifier l'arrivée du résultat toutes les 3 secondes
+    const interval = setInterval(async () => {
+      try {
+        const r = await fetch("https://swrspopzrvlqeqgjrjnk.supabase.co/rest/v1/base_checks?select=id&order=id.desc&limit=1", {
+          headers: { "apikey": "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1" }
+        });
+        const d = await r.json();
+        if (d.length && d[0].id > maxId) {
+          clearInterval(interval);
+          btn.innerHTML = "✅ Résultat reçu !";
+          await loadAndRender();
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = "⚡ Tester maintenant";
+          }, 3000);
+          return;
+        }
+      } catch(e) {}
+
+      // Timeout après 45s
+      if (Date.now() - startTime > 45000) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.innerHTML = "⚡ Tester maintenant";
+        loadAndRender();
+      }
+    }, 3000);
+
+  } catch(e) {
+    alert("Impossible de lancer le test : " + e.message);
+    btn.disabled = false;
+    btn.innerHTML = "⚡ Tester maintenant";
   }
 }
 
