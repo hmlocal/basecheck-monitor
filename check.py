@@ -5,20 +5,36 @@ BaseCheck Cloud Monitor
 Vérifie toutes les 10 minutes si la base NTRIP est en ligne.
 Loggue chaque vérification dans data/log.json.
 Le fichier JSON est ensuite lu par index.html (GitHub Pages).
+
+Les paramètres sensibles (HOST, PORT, MOUNTPOINT) sont lus depuis
+des variables d'environnement définies comme GitHub Secrets.
+Rien de sensible n'apparaît dans le code source public.
 """
 
 import socket
 import json
 import os
+import sys
 from datetime import datetime, timezone
 
-# ── Configuration ─────────────────────────────────────────────
-HOST       = "164.90.243.252"
-PORT       = 2101
-MOUNTPOINT = "MP12571"
-TIMEOUT    = 10        # secondes
-LOG_FILE   = "data/log.json"
-MAX_ENTRIES = 2000     # Garder les 2000 dernières entrées (~14 jours à 10 min)
+# ── Configuration — lue depuis les secrets GitHub ──────────────
+HOST       = os.environ.get("NTRIP_HOST")
+PORT_STR   = os.environ.get("NTRIP_PORT", "2101")
+MOUNTPOINT = os.environ.get("NTRIP_MOUNTPOINT")
+
+if not HOST or not MOUNTPOINT:
+    print("ERREUR : Les variables NTRIP_HOST et NTRIP_MOUNTPOINT doivent être définies.")
+    print("         Ajoutez-les comme Secrets dans : Settings → Secrets → Actions")
+    sys.exit(1)
+
+try:
+    PORT = int(PORT_STR)
+except ValueError:
+    PORT = 2101
+
+TIMEOUT     = 10        # secondes
+LOG_FILE    = "data/log.json"
+MAX_ENTRIES = 2000      # Garder les 2000 dernières entrées (~14 jours à 10 min)
 # ──────────────────────────────────────────────────────────────
 
 

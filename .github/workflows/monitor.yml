@@ -27,6 +27,10 @@ jobs:
 
       - name: Vérifier la base NTRIP
         run: python check.py
+        env:
+          NTRIP_HOST:       ${{ secrets.NTRIP_HOST }}
+          NTRIP_PORT:       ${{ secrets.NTRIP_PORT }}
+          NTRIP_MOUNTPOINT: ${{ secrets.NTRIP_MOUNTPOINT }}
 
       - name: Commiter et pousser le journal mis à jour
         run: |
