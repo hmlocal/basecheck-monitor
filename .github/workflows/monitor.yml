@@ -2,8 +2,8 @@ name: BaseCheck Monitor
 
 on:
   schedule:
-    # Toutes les 10 minutes (GitHub Actions minimum = 5 min)
-    - cron: "*/10 * * * *"
+    # Toutes les 30 minutes
+    - cron: "*/30 * * * *"
   workflow_dispatch:   # Permet de lancer manuellement depuis GitHub si besoin
 
 permissions:

@@ -34,7 +34,7 @@ except ValueError:
 
 TIMEOUT     = 10        # secondes
 LOG_FILE    = "data/log.json"
-MAX_ENTRIES = 2000      # Garder les 2000 dernières entrées (~14 jours à 10 min)
+MAX_ENTRIES = 4500      # ~94 jours à 30 min = couverture 3 mois complets
 # ──────────────────────────────────────────────────────────────
 
 

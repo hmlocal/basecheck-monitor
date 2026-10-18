@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BaseCheck — Connexion</title>
   <style>
-    /* ── Reset & base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -16,9 +15,7 @@
       padding: 20px;
     }
 
-    /* ══════════════════════════════════════════
-       ÉCRAN DE CONNEXION
-    ══════════════════════════════════════════ */
+    /* ══ LOCK SCREEN ══ */
     #lockScreen {
       display: flex;
       align-items: center;
@@ -35,189 +32,100 @@
       max-width: 360px;
       text-align: center;
     }
-    .lock-icon {
-      font-size: 2.4rem;
-      margin-bottom: 16px;
-    }
-    .lock-card h2 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-    .lock-card p {
-      color: #64748b;
-      font-size: 0.84rem;
-      margin-bottom: 28px;
-    }
+    .lock-icon { font-size: 2.4rem; margin-bottom: 16px; }
+    .lock-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+    .lock-card p { color: #64748b; font-size: 0.84rem; margin-bottom: 28px; }
     .lock-input {
-      width: 100%;
-      background: #0f1117;
-      border: 1px solid #2a2e3d;
-      border-radius: 10px;
-      color: #e2e8f0;
-      font-size: 1rem;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      outline: none;
+      width: 100%; background: #0f1117; border: 1px solid #2a2e3d;
+      border-radius: 10px; color: #e2e8f0; font-size: 1rem;
+      padding: 12px 14px; margin-bottom: 14px; outline: none;
       transition: border-color 0.2s;
     }
     .lock-input:focus { border-color: #3b82f6; }
     .lock-input.error { border-color: #ef4444; }
     .lock-btn {
-      width: 100%;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 12px;
-      cursor: pointer;
-      transition: background 0.2s;
+      width: 100%; background: #3b82f6; color: #fff; border: none;
+      border-radius: 10px; font-size: 1rem; font-weight: 600;
+      padding: 12px; cursor: pointer; transition: background 0.2s;
     }
     .lock-btn:hover { background: #2563eb; }
-    .lock-error {
-      color: #ef4444;
-      font-size: 0.8rem;
-      margin-top: 10px;
-      min-height: 18px;
-    }
+    .lock-error { color: #ef4444; font-size: 0.8rem; margin-top: 10px; min-height: 18px; }
     .lock-remember {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 0.78rem;
-      color: #64748b;
-      margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; font-size: 0.78rem; color: #64748b; margin-bottom: 14px;
     }
 
-    /* ══════════════════════════════════════════
-       TABLEAU DE BORD (caché par défaut)
-    ══════════════════════════════════════════ */
+    /* ══ DASHBOARD ══ */
     #dashboard { display: none; }
 
-    /* ── Header ── */
     header {
-      text-align: center;
-      margin-bottom: 32px;
-      position: relative;
+      text-align: center; margin-bottom: 28px; position: relative;
     }
-    header h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    header .subtitle {
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 4px;
-    }
+    header h1 { font-size: 1.7rem; font-weight: 700; }
+    header .subtitle { color: #64748b; font-size: 0.82rem; margin-top: 4px; }
     .dot-header {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      vertical-align: middle;
-      margin-right: 8px;
-      background: #64748b;
+      display: inline-block; width: 13px; height: 13px;
+      border-radius: 50%; vertical-align: middle; margin-right: 7px; background: #64748b;
     }
     .logout-btn {
-      position: absolute;
-      top: 0; right: 0;
-      background: none;
-      border: 1px solid #2a2e3d;
-      border-radius: 8px;
-      color: #64748b;
-      font-size: 0.75rem;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: all 0.2s;
+      position: absolute; top: 0; right: 0;
+      background: none; border: 1px solid #2a2e3d; border-radius: 8px;
+      color: #64748b; font-size: 0.74rem; padding: 5px 10px;
+      cursor: pointer; transition: all 0.2s;
     }
     .logout-btn:hover { border-color: #475569; color: #94a3b8; }
 
-    /* ── Status card ── */
+    /* ── Statut actuel ── */
     .current-status {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: #1a1f2e;
-      border: 1px solid #2a2e3d;
-      border-radius: 16px;
-      padding: 20px 28px;
-      max-width: 520px;
-      margin: 0 auto 32px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; background: #1a1f2e; border: 1px solid #2a2e3d;
+      border-radius: 14px; padding: 18px 24px;
+      max-width: 500px; margin: 0 auto 24px;
     }
-    .status-dot {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .status-dot.green  { background: #22c55e; box-shadow: 0 0 12px #22c55e88; }
-    .status-dot.red    { background: #ef4444; box-shadow: 0 0 12px #ef444488; }
-    .status-dot.orange { background: #f97316; box-shadow: 0 0 12px #f9731688; }
+    .status-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.green  { background: #22c55e; box-shadow: 0 0 10px #22c55e88; }
+    .status-dot.red    { background: #ef4444; box-shadow: 0 0 10px #ef444488; }
+    .status-dot.orange { background: #f97316; box-shadow: 0 0 10px #f9731688; }
     .status-dot.gray   { background: #475569; }
+    .status-label { font-size: 1.05rem; font-weight: 600; }
+    .status-time  { font-size: 0.76rem; color: #64748b; margin-top: 2px; }
 
-    .status-label { font-size: 1.1rem; font-weight: 600; }
-    .status-time  { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-
-    /* ── Stats row ── */
+    /* ── Stats ── */
     .stats-row {
-      display: flex;
-      gap: 12px;
-      max-width: 720px;
-      margin: 0 auto 28px;
-      flex-wrap: wrap;
+      display: flex; gap: 10px; max-width: 700px;
+      margin: 0 auto 28px; flex-wrap: wrap;
     }
     .stat-card {
-      flex: 1;
-      min-width: 140px;
-      background: #1a1f2e;
-      border: 1px solid #2a2e3d;
-      border-radius: 12px;
-      padding: 14px 16px;
-      text-align: center;
+      flex: 1; min-width: 130px; background: #1a1f2e;
+      border: 1px solid #2a2e3d; border-radius: 11px;
+      padding: 13px 14px; text-align: center;
     }
-    .stat-card .val { font-size: 1.6rem; font-weight: 700; }
-    .stat-card .lbl { font-size: 0.72rem; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .val.green  { color: #22c55e; }
-    .val.red    { color: #ef4444; }
+    .stat-card .val { font-size: 1.5rem; font-weight: 700; }
+    .stat-card .lbl {
+      font-size: 0.7rem; color: #64748b; margin-top: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .val.green { color: #22c55e; }
+    .val.red   { color: #ef4444; }
 
-    /* ── Section titre ── */
+    /* ── Timeline 24h ── */
     .section-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      max-width: 720px;
-      margin-left: auto;
-      margin-right: auto;
+      font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin: 0 auto 10px; max-width: 700px;
     }
-
-    /* ── Timeline bar 24h ── */
     .timeline-wrap {
-      max-width: 720px;
-      margin: 0 auto 32px;
-      background: #1a1f2e;
-      border: 1px solid #2a2e3d;
-      border-radius: 12px;
-      padding: 16px;
+      max-width: 700px; margin: 0 auto 28px;
+      background: #1a1f2e; border: 1px solid #2a2e3d;
+      border-radius: 11px; padding: 14px;
     }
     .timeline-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: #475569;
-      margin-bottom: 6px;
+      display: flex; justify-content: space-between;
+      font-size: 0.68rem; color: #475569; margin-bottom: 6px;
     }
     .timeline-bar {
-      height: 28px;
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      background: #0f1117;
+      height: 24px; border-radius: 5px; overflow: hidden;
+      display: flex; background: #0f1117;
     }
     .bar-seg { height: 100%; }
     .bar-seg.online  { background: #22c55e; }
@@ -225,66 +133,102 @@
     .bar-seg.nonet   { background: #f97316; }
     .bar-seg.unknown { background: #1e293b; }
 
-    /* ── Table journalière ── */
-    .days-table {
-      max-width: 720px;
-      margin: 0 auto 32px;
-      background: #1a1f2e;
-      border: 1px solid #2a2e3d;
-      border-radius: 12px;
-      overflow: hidden;
+    /* ══ CALENDRIER 3 MOIS ══ */
+    .calendar-grid {
+      max-width: 700px; margin: 0 auto 32px;
+      display: flex; flex-direction: column; gap: 18px;
     }
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      background: #131720;
-      padding: 10px 14px;
-      text-align: left;
-      font-size: 0.75rem;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+
+    /* Bloc d'un mois */
+    .month-block {
+      background: #1a1f2e; border: 1px solid #2a2e3d;
+      border-radius: 12px; overflow: hidden;
+    }
+    .month-header {
+      background: #131720; padding: 10px 16px;
       border-bottom: 1px solid #2a2e3d;
+      font-size: 0.9rem; font-weight: 700;
+      color: #cbd5e1; letter-spacing: 0.5px;
+      text-transform: capitalize;
     }
-    tbody tr { border-bottom: 1px solid #1e2536; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody td { padding: 10px 14px; font-size: 0.85rem; vertical-align: top; }
-    tbody tr:hover { background: #1e2537; }
 
-    .uptime-bar  { display: flex; align-items: center; gap: 6px; }
-    .uptime-track { flex: 1; height: 6px; background: #2a2e3d; border-radius: 3px; overflow: hidden; }
-    .uptime-fill  { height: 100%; border-radius: 3px; background: #22c55e; }
-    .uptime-pct   { font-size: 0.78rem; color: #94a3b8; width: 38px; text-align: right; }
+    /* Tableau de jours */
+    .month-table { width: 100%; border-collapse: collapse; }
+    .month-table thead th {
+      padding: 7px 10px; text-align: left;
+      font-size: 0.68rem; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid #1e2536;
+      background: #131720;
+    }
+    .month-table tbody tr {
+      border-bottom: 1px solid #1a2030;
+      transition: background 0.15s;
+    }
+    .month-table tbody tr:last-child { border-bottom: none; }
+    .month-table tbody tr:hover { background: #1e2537; }
+    .month-table tbody td {
+      padding: 8px 10px; font-size: 0.82rem; vertical-align: middle;
+    }
 
-    .event-list { list-style: none; }
-    .event-list li { padding: 2px 0; font-size: 0.8rem; }
-    .ev-on  { color: #4ade80; }
-    .ev-off { color: #f87171; }
-    .ev-ts  { color: #64748b; font-size: 0.74rem; margin-right: 6px; }
+    /* Colonne date */
+    .td-date {
+      font-weight: 600; color: #94a3b8;
+      white-space: nowrap; width: 110px;
+    }
+    .td-date.today { color: #60a5fa; }
+    .td-date.weekend { color: #7c8da8; }
+
+    /* Pastille statut */
+    .day-dot {
+      display: inline-block; width: 9px; height: 9px;
+      border-radius: 50%; margin-right: 7px; flex-shrink: 0;
+      vertical-align: middle;
+    }
+    .day-dot.green  { background: #22c55e; }
+    .day-dot.red    { background: #ef4444; }
+    .day-dot.gray   { background: #334155; }
+
+    /* Colonne allumage / extinction */
+    .td-times { color: #cbd5e1; font-size: 0.8rem; }
+    .td-times .time-on  { color: #4ade80; }
+    .td-times .time-off { color: #f87171; }
+    .td-times .sep { color: #475569; margin: 0 5px; }
+    .td-times .no-data { color: #334155; font-style: italic; }
+
+    /* Uptime bar compacte */
+    .td-uptime { width: 90px; }
+    .uptime-mini { display: flex; align-items: center; gap: 5px; }
+    .uptime-track-mini {
+      flex: 1; height: 4px; background: #2a2e3d;
+      border-radius: 2px; overflow: hidden;
+    }
+    .uptime-fill-mini { height: 100%; border-radius: 2px; background: #22c55e; }
+    .uptime-pct-mini { font-size: 0.7rem; color: #64748b; width: 30px; text-align: right; }
 
     footer {
-      text-align: center;
-      color: #334155;
-      font-size: 0.75rem;
-      margin-top: 20px;
+      text-align: center; color: #334155;
+      font-size: 0.72rem; margin-top: 12px;
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 500px) {
       .stats-row { flex-direction: column; }
-      header h1 { font-size: 1.4rem; }
-      .logout-btn { position: static; margin-top: 10px; }
+      header h1 { font-size: 1.3rem; }
+      .td-uptime { display: none; }
+      .logout-btn { position: static; margin-top: 8px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ══ ÉCRAN DE CONNEXION ══ -->
+<!-- ══ LOCK SCREEN ══ -->
 <div id="lockScreen">
   <div class="lock-card">
     <div class="lock-icon">🔒</div>
     <h2>Base Check</h2>
     <p>Entrez le mot de passe pour accéder au tableau de bord.</p>
-    <input type="password" id="pwdInput" class="lock-input" placeholder="Mot de passe"
-           autocomplete="current-password" />
+    <input type="password" id="pwdInput" class="lock-input"
+           placeholder="Mot de passe" autocomplete="current-password" />
     <label class="lock-remember">
       <input type="checkbox" id="rememberCheck" checked />
       Se souvenir sur cet appareil
@@ -294,14 +238,15 @@
   </div>
 </div>
 
-<!-- ══ TABLEAU DE BORD ══ -->
+<!-- ══ DASHBOARD ══ -->
 <div id="dashboard">
   <header>
     <h1><span class="dot-header" id="headerDot"></span>Base Check</h1>
-    <p class="subtitle">Surveillance NTRIP automatique — Mis à jour toutes les 10 minutes</p>
+    <p class="subtitle">Surveillance NTRIP automatique — Vérification toutes les 30 minutes</p>
     <button class="logout-btn" onclick="logout()">🔒 Verrouiller</button>
   </header>
 
+  <!-- Statut actuel -->
   <div class="current-status">
     <div class="status-dot gray" id="currentDot"></div>
     <div>
@@ -310,237 +255,227 @@
     </div>
   </div>
 
-  <div class="section-title">Statistiques — 7 derniers jours</div>
+  <!-- Stats 30 jours -->
+  <div class="section-title">Statistiques — 30 derniers jours</div>
   <div class="stats-row">
     <div class="stat-card"><div class="val green" id="statUptime">—</div><div class="lbl">Uptime moyen</div></div>
-    <div class="stat-card"><div class="val red"   id="statCoupures">—</div><div class="lbl">Coupures (7j)</div></div>
+    <div class="stat-card"><div class="val red"   id="statCoupures">—</div><div class="lbl">Coupures (30j)</div></div>
     <div class="stat-card"><div class="val"        id="statDuree">—</div><div class="lbl">Durée moy. coupure</div></div>
     <div class="stat-card"><div class="val"        id="statChecks">—</div><div class="lbl">Vérifications totales</div></div>
   </div>
 
+  <!-- Timeline 24h -->
   <div class="section-title">Disponibilité — Dernières 24 heures</div>
   <div class="timeline-wrap">
-    <div class="timeline-label"><span>–24h</span><span>–18h</span><span>–12h</span><span>–6h</span><span>Maintenant</span></div>
+    <div class="timeline-label">
+      <span>–24h</span><span>–18h</span><span>–12h</span><span>–6h</span><span>Maintenant</span>
+    </div>
     <div class="timeline-bar" id="timelineBar"></div>
   </div>
 
-  <div class="section-title">Historique journalier</div>
-  <div class="days-table">
-    <table>
-      <thead>
-        <tr>
-          <th>Jour</th>
-          <th>Uptime</th>
-          <th>Allumages / Extinctions</th>
-        </tr>
-      </thead>
-      <tbody id="daysBody">
-        <tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Chargement…</td></tr>
-      </tbody>
-    </table>
+  <!-- Calendrier 3 mois -->
+  <div class="section-title">Calendrier — 3 derniers mois</div>
+  <div class="calendar-grid" id="calendarGrid">
+    <div style="text-align:center;color:#475569;padding:32px">Chargement…</div>
   </div>
 
   <footer id="footer">—</footer>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  MOT DE PASSE
-//  Le mot de passe est hashé en SHA-256 côté client.
-//  Changez PASSWORD_HASH pour changer le mot de passe.
-//  Pour générer un nouveau hash : https://emn178.github.io/online-tools/sha256.html
-//
+// ══════════════════════════════════════════
+//  MOT DE PASSE  (SHA-256 Web Crypto)
 //  Mot de passe par défaut : BaseCheck2024
-// ══════════════════════════════════════════════════════════════
-const PASSWORD_HASH = "e4d909c290d0fb1ca068ffaddf22cbd0"; // MD5 placeholder — remplacé au runtime par SHA-256 Web Crypto
+//  Pour changer : recalculez le hash sur
+//  https://emn178.github.io/online-tools/sha256.html
+//  et remplacez CORRECT_HASH ci-dessous.
+// ══════════════════════════════════════════
 const UNLOCK_KEY = "basecheck_unlocked_v1";
-
-// Hash SHA-256 via Web Crypto API (natif dans tous les navigateurs modernes)
-async function sha256(message) {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-// Hash SHA-256 du mot de passe correct (BaseCheck2024 par défaut)
-// CHANGEZ CETTE VALEUR pour changer le mot de passe.
-// Calculez le nouveau hash sur : https://emn178.github.io/online-tools/sha256.html
-const CORRECT_HASH = "a8b3e5e7c6f4d1a2b9e0c3f7d5a6e8b1c2d4f6a8e0b2c4d6f8a0b2c4d6f8a0";
-// ↑ REMPLACÉ AU DÉMARRAGE PAR LE VRAI HASH — voir initPasswordHash() ci-dessous
-
 let resolvedHash = null;
 
-async function initPasswordHash() {
-  // Hash de "BaseCheck2024" — à remplacer si vous voulez changer le mot de passe
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+async function initHash() {
   resolvedHash = await sha256("BaseCheck2024");
 }
-
 async function tryUnlock() {
-  const input = document.getElementById("pwdInput").value;
-  const errorEl = document.getElementById("lockError");
-  const inputEl = document.getElementById("pwdInput");
-
-  if (!input) {
-    errorEl.textContent = "Veuillez entrer un mot de passe.";
-    inputEl.classList.add("error");
-    return;
-  }
-
-  const inputHash = await sha256(input);
-
-  if (inputHash === resolvedHash) {
-    // Mot de passe correct
-    inputEl.classList.remove("error");
-    errorEl.textContent = "";
-
-    const remember = document.getElementById("rememberCheck").checked;
-    if (remember) {
-      localStorage.setItem(UNLOCK_KEY, resolvedHash);
-    } else {
-      sessionStorage.setItem(UNLOCK_KEY, resolvedHash);
-    }
-
+  const val = document.getElementById("pwdInput").value;
+  const err = document.getElementById("lockError");
+  const inp = document.getElementById("pwdInput");
+  if (!val) { err.textContent = "Mot de passe requis."; inp.classList.add("error"); return; }
+  if (await sha256(val) === resolvedHash) {
+    inp.classList.remove("error"); err.textContent = "";
+    const rem = document.getElementById("rememberCheck").checked;
+    (rem ? localStorage : sessionStorage).setItem(UNLOCK_KEY, resolvedHash);
     showDashboard();
   } else {
-    errorEl.textContent = "Mot de passe incorrect.";
-    inputEl.classList.add("error");
-    inputEl.value = "";
-    inputEl.focus();
+    err.textContent = "Mot de passe incorrect.";
+    inp.classList.add("error"); inp.value = ""; inp.focus();
   }
 }
-
 function logout() {
-  localStorage.removeItem(UNLOCK_KEY);
-  sessionStorage.removeItem(UNLOCK_KEY);
+  localStorage.removeItem(UNLOCK_KEY); sessionStorage.removeItem(UNLOCK_KEY);
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("lockScreen").style.display = "flex";
   document.getElementById("pwdInput").value = "";
 }
-
 function showDashboard() {
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.title = "BaseCheck — Surveillance NTRIP";
   loadAndRender();
 }
-
-// Vérifier si déjà déverrouillé (localStorage / sessionStorage)
 async function checkAutoUnlock() {
-  await initPasswordHash();
+  await initHash();
   const stored = localStorage.getItem(UNLOCK_KEY) || sessionStorage.getItem(UNLOCK_KEY);
-  if (stored === resolvedHash) {
-    showDashboard();
-  }
-  // Sinon : on reste sur l'écran de connexion
+  if (stored === resolvedHash) showDashboard();
 }
+document.getElementById("pwdInput").addEventListener("keydown", e => { if (e.key==="Enter") tryUnlock(); });
 
-// Touche Entrée sur le champ mot de passe
-document.getElementById("pwdInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") tryUnlock();
-});
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+const LABEL = { ONLINE:"Base en ligne", BASE_OFFLINE:"Base hors-ligne", NO_INTERNET:"Pas d'accès Internet" };
+const COLOR = { ONLINE:"green", BASE_OFFLINE:"red", NO_INTERNET:"orange" };
 
-// ══════════════════════════════════════════════════════════════
-//  TABLEAU DE BORD
-// ══════════════════════════════════════════════════════════════
-const STATUS_LABEL = {
-  ONLINE: "Base en ligne",
-  BASE_OFFLINE: "Base hors-ligne",
-  NO_INTERNET: "Pas d'accès Internet",
-};
-const STATUS_COLOR = {
-  ONLINE: "green", BASE_OFFLINE: "red", NO_INTERNET: "orange",
-};
-
-function fmtTimeLocal(isoStr) {
-  return new Date(isoStr).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+function fmtTime(iso) {
+  return new Date(iso).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+}
+function fmtDuration(min) {
+  min = Math.round(min);
+  if (min < 60) return min + " min";
+  return Math.floor(min/60) + "h" + (min%60 ? (min%60) + "m" : "");
 }
 function minutesBetween(a, b) { return (new Date(b) - new Date(a)) / 60000; }
-function fmtDuration(minutes) {
-  const m = Math.round(minutes);
-  if (m < 60) return m + " min";
-  const h = Math.floor(m / 60), rm = m % 60;
-  return h + "h" + (rm ? rm + "m" : "");
-}
-function dayKey(isoStr) {
-  const d = new Date(isoStr);
-  return d.toLocaleDateString("fr-FR", { year: "numeric", month: "2-digit", day: "2-digit" });
-}
-function dayLabel(isoStr) {
-  const d = new Date(isoStr);
-  const today = new Date();
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-  if (dayKey(d.toISOString()) === dayKey(today.toISOString())) return "Aujourd'hui";
-  if (dayKey(d.toISOString()) === dayKey(yesterday.toISOString())) return "Hier";
-  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" });
-}
 
-async function loadLog() {
-  const resp = await fetch("data/log.json?t=" + Date.now());
-  if (!resp.ok) throw new Error("Impossible de charger log.json");
-  return resp.json();
+// Clé locale d'un jour : "2026-10-18"
+function localDayKey(iso) {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
 }
+// Clé d'un mois : "2026-10"
+function monthKey(iso) { return localDayKey(iso).substring(0, 7); }
 
+// ══════════════════════════════════════════
+//  ANALYSE
+// ══════════════════════════════════════════
 function analyze(entries) {
-  if (!entries.length) return null;
-  const last = entries[entries.length - 1];
-  const now = new Date();
-  const ago24h = new Date(now - 24 * 3600 * 1000);
-  const ago7d  = new Date(now - 7 * 24 * 3600 * 1000);
+  const last   = entries[entries.length - 1];
+  const now    = new Date();
+  const ago24h = new Date(now - 24*3600*1000);
+  const ago30d = new Date(now - 30*24*3600*1000);
+
   const last24 = entries.filter(e => new Date(e.timestamp) >= ago24h);
-  const last7d  = entries.filter(e => new Date(e.timestamp) >= ago7d);
+  const last30 = entries.filter(e => new Date(e.timestamp) >= ago30d);
 
-  const onlineCount7d = last7d.filter(e => e.status === "ONLINE").length;
-  const uptime7d = last7d.length ? Math.round(100 * onlineCount7d / last7d.length) : 0;
-
-  let coupures = 0, totalCoupureMin = 0, inCoupure = false, coupureStart = null;
-  for (const e of last7d) {
-    const isDown = e.status !== "ONLINE";
-    if (isDown && !inCoupure)  { inCoupure = true; coupureStart = e.timestamp; coupures++; }
-    if (!isDown &&  inCoupure) { inCoupure = false; totalCoupureMin += minutesBetween(coupureStart, e.timestamp); }
+  // Stats 30j
+  const onN30 = last30.filter(e => e.status === "ONLINE").length;
+  const uptime30 = last30.length ? Math.round(100 * onN30 / last30.length) : 0;
+  let coupures = 0, totalCoup = 0, inCoup = false, coupStart = null;
+  for (const e of last30) {
+    const down = e.status !== "ONLINE";
+    if (down && !inCoup)  { inCoup = true; coupStart = e.timestamp; coupures++; }
+    if (!down &&  inCoup) { inCoup = false; totalCoup += minutesBetween(coupStart, e.timestamp); }
   }
-  const avgCoupureMin = coupures ? totalCoupureMin / coupures : 0;
+  const avgCoup = coupures ? totalCoup / coupures : 0;
 
-  // Regroupement par jour
-  const daysMap = {};
+  // Timeline 24h
+  const timeline = last24.map(e => e.status);
+
+  // ── Regroupement par jour ──
+  const dayMap = {};
   for (const e of entries) {
-    const k = dayKey(e.timestamp);
-    if (!daysMap[k]) daysMap[k] = { key: k, label: dayLabel(e.timestamp), entries: [] };
-    daysMap[k].entries.push(e);
+    const k = localDayKey(e.timestamp);
+    if (!dayMap[k]) dayMap[k] = [];
+    dayMap[k].push(e);
   }
-  const daysData = Object.values(daysMap).reverse().map(day => {
-    const es = day.entries;
-    const uptime = Math.round(100 * es.filter(e => e.status === "ONLINE").length / es.length);
-    const events = [];
-    for (let i = 1; i < es.length; i++) {
-      const prev = es[i - 1], cur = es[i];
-      if (prev.status !== "ONLINE" && cur.status === "ONLINE")
-        events.push({ type: "ON",  time: cur.timestamp });
-      if (prev.status === "ONLINE" && cur.status !== "ONLINE")
-        events.push({ type: "OFF", time: cur.timestamp, reason: cur.status });
+
+  // ── Calendrier : mois en cours + 2 précédents ──
+  const months = [];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() }); // 0-based month
+  }
+
+  const calData = months.map(({ year, month }) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      // Skip future days
+      if (date > now) continue;
+
+      const key = (() => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth()+1).padStart(2,"0");
+        const dd = String(date.getDate()).padStart(2,"0");
+        return `${y}-${m}-${dd}`;
+      })();
+
+      const es = dayMap[key] || [];
+
+      // Uptime du jour
+      const uptime = es.length
+        ? Math.round(100 * es.filter(e => e.status === "ONLINE").length / es.length)
+        : null;
+
+      // Déterminer si "allumé" : au moins une entrée ONLINE dans le jour
+      const hasOnline = es.some(e => e.status === "ONLINE");
+
+      // Premier allumage du jour = première entrée ONLINE
+      const onlineEntries = es.filter(e => e.status === "ONLINE");
+      const firstOn  = onlineEntries.length ? onlineEntries[0].timestamp : null;
+
+      // Dernier arrêt = dernière entrée non-ONLINE APRÈS la dernière entrée ONLINE
+      let lastOff = null;
+      if (onlineEntries.length) {
+        const lastOnIdx = es.lastIndexOf(onlineEntries[onlineEntries.length - 1]);
+        for (let i = lastOnIdx + 1; i < es.length; i++) {
+          if (es[i].status !== "ONLINE") { lastOff = es[i].timestamp; break; }
+        }
+      }
+
+      // Est-ce aujourd'hui ?
+      const isToday = key === localDayKey(now.toISOString());
+      // Est-ce weekend ?
+      const dow = date.getDay(); // 0=dim, 6=sam
+      const isWeekend = dow === 0 || dow === 6;
+
+      days.push({ date, key, day: d, es, uptime, hasOnline, firstOn, lastOff, isToday, isWeekend });
     }
-    return { ...day, uptime, events };
+
+    const monthName = new Date(year, month, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    return { year, month, monthName, days };
   });
 
-  const timeline = last24.map(e => e.status);
-  return { last, uptime7d, coupures, avgCoupureMin, totalChecks: entries.length, daysData, timeline };
+  return { last, uptime30, coupures, avgCoup, totalChecks: entries.length, timeline, calData };
 }
 
+// ══════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════
 function render(data) {
-  const { last, uptime7d, coupures, avgCoupureMin, totalChecks, daysData, timeline } = data;
+  const { last, uptime30, coupures, avgCoup, totalChecks, timeline, calData } = data;
 
   // Statut actuel
-  const color = STATUS_COLOR[last.status] || "gray";
-  document.getElementById("currentDot").className = "status-dot " + color;
+  const col = COLOR[last.status] || "gray";
+  document.getElementById("currentDot").className = "status-dot " + col;
   const hd = document.getElementById("headerDot");
-  hd.style.background = color === "green" ? "#22c55e" : color === "red" ? "#ef4444" : color === "orange" ? "#f97316" : "#475569";
-  document.getElementById("currentLabel").textContent = STATUS_LABEL[last.status] || last.status;
-  document.getElementById("currentTime").textContent  = "Dernière vérification : " + new Date(last.timestamp).toLocaleString("fr-FR");
+  hd.style.background = col==="green"?"#22c55e":col==="red"?"#ef4444":col==="orange"?"#f97316":"#475569";
+  document.getElementById("currentLabel").textContent = LABEL[last.status] || last.status;
+  document.getElementById("currentTime").textContent  =
+    "Dernière vérification : " + new Date(last.timestamp).toLocaleString("fr-FR");
 
   // Stats
-  document.getElementById("statUptime").textContent   = uptime7d + "%";
+  document.getElementById("statUptime").textContent   = uptime30 + "%";
   document.getElementById("statCoupures").textContent = coupures;
-  document.getElementById("statDuree").textContent    = avgCoupureMin ? fmtDuration(avgCoupureMin) : "—";
+  document.getElementById("statDuree").textContent    = avgCoup ? fmtDuration(avgCoup) : "—";
   document.getElementById("statChecks").textContent   = totalChecks;
 
   // Timeline 24h
@@ -551,74 +486,140 @@ function render(data) {
     seg.className = "bar-seg unknown"; seg.style.flex = "1";
     bar.appendChild(seg);
   } else {
-    let segs = [], cur = { status: timeline[0], count: 1 };
+    let segs = [], cur = { s: timeline[0], n: 1 };
     for (let i = 1; i < timeline.length; i++) {
-      if (timeline[i] === cur.status) cur.count++;
-      else { segs.push(cur); cur = { status: timeline[i], count: 1 }; }
+      if (timeline[i] === cur.s) cur.n++;
+      else { segs.push(cur); cur = { s: timeline[i], n: 1 }; }
     }
     segs.push(cur);
     for (const s of segs) {
       const div = document.createElement("div");
-      div.style.flex = s.count;
-      div.title = STATUS_LABEL[s.status] || s.status;
-      div.className = "bar-seg " + (s.status === "ONLINE" ? "online" : s.status === "BASE_OFFLINE" ? "offline" : "nonet");
+      div.style.flex = s.n;
+      div.title = LABEL[s.s] || s.s;
+      div.className = "bar-seg " + (s.s==="ONLINE"?"online":s.s==="BASE_OFFLINE"?"offline":"nonet");
       bar.appendChild(div);
     }
   }
 
-  // Tableau journalier
-  const tbody = document.getElementById("daysBody");
-  tbody.innerHTML = "";
-  if (!daysData.length) {
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Aucune donnée</td></tr>';
-    return;
-  }
-  for (const d of daysData) {
-    const tr = document.createElement("tr");
+  // ── Calendrier 3 mois ──
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
 
-    const tdDay = document.createElement("td");
-    tdDay.style.fontWeight = "600";
-    tdDay.textContent = d.label;
-    tr.appendChild(tdDay);
+  for (const mon of calData) {
+    const block = document.createElement("div");
+    block.className = "month-block";
 
-    const tdUp = document.createElement("td");
-    tdUp.innerHTML = `<div class="uptime-bar"><div class="uptime-track"><div class="uptime-fill" style="width:${d.uptime}%"></div></div><div class="uptime-pct">${d.uptime}%</div></div>`;
-    tr.appendChild(tdUp);
+    // En-tête du mois
+    const hdr = document.createElement("div");
+    hdr.className = "month-header";
+    hdr.textContent = mon.monthName.charAt(0).toUpperCase() + mon.monthName.slice(1);
+    block.appendChild(hdr);
 
-    const tdEv = document.createElement("td");
-    if (!d.events.length) {
-      tdEv.innerHTML = '<span style="color:#475569;font-size:0.78rem">Aucun changement enregistré</span>';
-    } else {
-      const ul = document.createElement("ul");
-      ul.className = "event-list";
-      for (const ev of d.events) {
-        const li = document.createElement("li");
-        const ts = `<span class="ev-ts">${fmtTimeLocal(ev.time)}</span>`;
-        if (ev.type === "ON") {
-          li.innerHTML = ts + '<span class="ev-on">▲ Allumage</span>';
-        } else {
-          const reason = ev.reason === "NO_INTERNET" ? " (réseau)" : "";
-          li.innerHTML = ts + '<span class="ev-off">▼ Extinction' + reason + '</span>';
-        }
-        ul.appendChild(li);
-      }
-      tdEv.appendChild(ul);
+    if (!mon.days.length) {
+      const empty = document.createElement("div");
+      empty.style.cssText = "padding:16px;color:#475569;font-size:0.82rem;text-align:center";
+      empty.textContent = "Aucune donnée pour ce mois";
+      block.appendChild(empty);
+      grid.appendChild(block);
+      continue;
     }
-    tr.appendChild(tdEv);
-    tbody.appendChild(tr);
+
+    // Tableau de jours
+    const tbl = document.createElement("table");
+    tbl.className = "month-table";
+
+    // Thead
+    tbl.innerHTML = `<thead><tr>
+      <th>Jour</th>
+      <th>Statut</th>
+      <th>Premier allumage</th>
+      <th>Dernier arrêt</th>
+      <th class="td-uptime">Uptime</th>
+    </tr></thead>`;
+
+    const tbody = document.createElement("tbody");
+
+    for (const day of mon.days) {
+      const tr = document.createElement("tr");
+
+      // ── Date ──
+      const dateLabel = day.date.toLocaleDateString("fr-FR", { weekday:"short", day:"2-digit" });
+      const tdDate = document.createElement("td");
+      tdDate.className = "td-date" + (day.isToday ? " today" : day.isWeekend ? " weekend" : "");
+      tdDate.textContent = dateLabel + (day.isToday ? " ★" : "");
+      tr.appendChild(tdDate);
+
+      // ── Statut (dot) ──
+      const tdStatus = document.createElement("td");
+      if (!day.es.length) {
+        tdStatus.innerHTML = '<span class="day-dot gray"></span><span style="color:#334155;font-size:0.76rem">—</span>';
+      } else if (day.hasOnline) {
+        tdStatus.innerHTML = '<span class="day-dot green"></span><span style="color:#4ade80;font-size:0.76rem">En ligne</span>';
+      } else {
+        tdStatus.innerHTML = '<span class="day-dot red"></span><span style="color:#f87171;font-size:0.76rem">Hors-ligne</span>';
+      }
+      tr.appendChild(tdStatus);
+
+      // ── Premier allumage ──
+      const tdOn = document.createElement("td");
+      tdOn.className = "td-times";
+      if (day.firstOn) {
+        tdOn.innerHTML = `<span class="time-on">▲ ${fmtTime(day.firstOn)}</span>`;
+      } else {
+        tdOn.innerHTML = `<span class="no-data">—</span>`;
+      }
+      tr.appendChild(tdOn);
+
+      // ── Dernier arrêt ──
+      const tdOff = document.createElement("td");
+      tdOff.className = "td-times";
+      if (day.lastOff) {
+        tdOff.innerHTML = `<span class="time-off">▼ ${fmtTime(day.lastOff)}</span>`;
+      } else if (day.hasOnline && !day.lastOff) {
+        // Toujours en ligne à la fin du jour (ou aujourd'hui)
+        tdOff.innerHTML = `<span style="color:#64748b;font-size:0.76rem">${day.isToday ? "En cours" : "Toute la journée"}</span>`;
+      } else {
+        tdOff.innerHTML = `<span class="no-data">—</span>`;
+      }
+      tr.appendChild(tdOff);
+
+      // ── Uptime barre ──
+      const tdUp = document.createElement("td");
+      tdUp.className = "td-uptime";
+      if (day.uptime !== null) {
+        tdUp.innerHTML = `<div class="uptime-mini">
+          <div class="uptime-track-mini"><div class="uptime-fill-mini" style="width:${day.uptime}%"></div></div>
+          <div class="uptime-pct-mini">${day.uptime}%</div>
+        </div>`;
+      } else {
+        tdUp.innerHTML = `<span style="color:#334155">—</span>`;
+      }
+      tr.appendChild(tdUp);
+
+      tbody.appendChild(tr);
+    }
+
+    tbl.appendChild(tbody);
+    block.appendChild(tbl);
+    grid.appendChild(block);
   }
 
   document.getElementById("footer").textContent =
-    "BaseCheck · Données en UTC · Rafraîchi le " + new Date().toLocaleString("fr-FR");
+    "BaseCheck · Heures en heure locale · Rafraîchi le " + new Date().toLocaleString("fr-FR");
 }
 
+// ══════════════════════════════════════════
+//  CHARGEMENT
+// ══════════════════════════════════════════
 async function loadAndRender() {
   try {
-    const entries = await loadLog();
+    const resp = await fetch("data/log.json?t=" + Date.now());
+    if (!resp.ok) throw new Error("Impossible de charger log.json");
+    const entries = await resp.json();
     if (!entries.length) {
       document.getElementById("currentLabel").textContent = "Aucune donnée encore";
-      document.getElementById("daysBody").innerHTML =
-        '<tr><td colspan="3" style="text-align:center;color:#475569;padding:24px">Aucune vérification effectuée pour l\'instant.<br>Le système se lancera automatiquement dans quelques minutes.</td></tr>';
+      document.getElementById("calendarGrid").innerHTML =
+        '<div style="text-align:center;color:#475569;padding:32px">Aucune vérification effectuée pour l\'instant.<br>Le système se lancera automatiquement dans quelques minutes.</div>';
       return;
     }
     render(analyze(entries));
