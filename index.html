@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verification d'état et attachement</title>
+  <title>BaseCheck — Connexion</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -29,15 +29,15 @@
       border-radius: 20px;
       padding: 40px 36px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       text-align: center;
     }
     .lock-icon { font-size: 2.4rem; margin-bottom: 16px; }
     .lock-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
-    .lock-card p { color: #64748b; font-size: 0.84rem; margin-bottom: 28px; }
+    .lock-card p { color: #64748b; font-size: 0.84rem; margin-bottom: 24px; }
     .lock-input {
       width: 100%; background: #0f1117; border: 1px solid #2a2e3d;
-      border-radius: 10px; color: #e2e8f0; font-size: 1rem;
+      border-radius: 10px; color: #e2e8f0; font-size: 0.95rem;
       padding: 12px 14px; margin-bottom: 14px; outline: none;
       transition: border-color 0.2s;
     }
@@ -67,13 +67,16 @@
       display: inline-block; width: 13px; height: 13px;
       border-radius: 50%; vertical-align: middle; margin-right: 7px; background: #64748b;
     }
-    .logout-btn {
+    .header-actions {
       position: absolute; top: 0; right: 0;
+      display: flex; gap: 8px;
+    }
+    .logout-btn {
       background: none; border: 1px solid #2a2e3d; border-radius: 8px;
-      color: #64748b; font-size: 0.74rem; padding: 5px 10px;
+      color: #94a3b8; font-size: 0.76rem; padding: 6px 11px;
       cursor: pointer; transition: all 0.2s;
     }
-    .logout-btn:hover { border-color: #475569; color: #94a3b8; }
+    .logout-btn:hover { border-color: #475569; color: #fff; }
 
     /* ── Statut actuel ── */
     .current-status {
@@ -91,22 +94,12 @@
     .status-time  { font-size: 0.76rem; color: #64748b; margin-top: 2px; }
 
     .refresh-btn {
-      background: #0f1117;
-      border: 1px solid #2a2e3d;
-      border-radius: 8px;
-      color: #94a3b8;
-      font-size: 1.1rem;
-      padding: 8px 12px;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #0f1117; border: 1px solid #2a2e3d; border-radius: 8px;
+      color: #94a3b8; font-size: 0.85rem; padding: 8px 12px;
+      cursor: pointer; transition: all 0.2s;
     }
     .refresh-btn:hover {
-      background: #1e2538;
-      color: #fff;
-      border-color: #3b82f6;
-    }
-    .refresh-btn:active {
-      transform: rotate(180deg);
+      background: #1e2538; color: #fff; border-color: #3b82f6;
     }
 
     .section-title {
@@ -121,7 +114,6 @@
       display: flex; flex-direction: column; gap: 18px;
     }
 
-    /* Bloc d'un mois */
     .month-block {
       background: #1a1f2e; border: 1px solid #2a2e3d;
       border-radius: 12px; overflow: hidden;
@@ -134,7 +126,6 @@
       text-transform: capitalize;
     }
 
-    /* Tableau de jours */
     .month-table { width: 100%; border-collapse: collapse; }
     .month-table thead th {
       padding: 7px 10px; text-align: left;
@@ -153,7 +144,6 @@
       padding: 8px 10px; font-size: 0.82rem; vertical-align: middle;
     }
 
-    /* Colonne date */
     .td-date {
       font-weight: 600; color: #94a3b8;
       white-space: nowrap; width: 110px;
@@ -161,7 +151,6 @@
     .td-date.today { color: #60a5fa; }
     .td-date.weekend { color: #7c8da8; }
 
-    /* Pastille statut */
     .day-dot {
       display: inline-block; width: 9px; height: 9px;
       border-radius: 50%; margin-right: 7px; flex-shrink: 0;
@@ -171,14 +160,11 @@
     .day-dot.red    { background: #ef4444; }
     .day-dot.gray   { background: #334155; }
 
-    /* Colonne allumage / extinction */
     .td-times { color: #cbd5e1; font-size: 0.8rem; }
     .td-times .time-on  { color: #4ade80; }
     .td-times .time-off { color: #f87171; }
-    .td-times .sep { color: #475569; margin: 0 5px; }
     .td-times .no-data { color: #334155; font-style: italic; }
 
-    /* Uptime bar compacte */
     .td-uptime { width: 90px; }
     .uptime-mini { display: flex; align-items: center; gap: 5px; }
     .uptime-track-mini {
@@ -188,16 +174,22 @@
     .uptime-fill-mini { height: 100%; border-radius: 2px; background: #22c55e; }
     .uptime-pct-mini { font-size: 0.7rem; color: #64748b; width: 30px; text-align: right; }
 
+    /* Modal style */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75); z-index: 999;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+
     footer {
       text-align: center; color: #334155;
       font-size: 0.72rem; margin-top: 12px;
     }
 
     @media (max-width: 500px) {
-      .stats-row { flex-direction: column; }
       header h1 { font-size: 1.3rem; }
+      .header-actions { position: static; justify-content: center; margin-top: 10px; }
       .td-uptime { display: none; }
-      .logout-btn { position: static; margin-top: 8px; }
     }
   </style>
 </head>
@@ -224,8 +216,11 @@
 <div id="dashboard">
   <header>
     <h1><span class="dot-header" id="headerDot"></span>Base Check</h1>
-    <p class="subtitle">Surveillance automatique</p>
-    <button class="logout-btn" onclick="logout()">🔒 Verrouiller</button>
+    <p class="subtitle">Surveillance NTRIP automatique</p>
+    <div class="header-actions">
+      <button class="logout-btn" onclick="openConfigModal()">⚙️ Config</button>
+      <button class="logout-btn" onclick="logout()">🔒 Verrouiller</button>
+    </div>
   </header>
 
   <!-- Statut actuel -->
@@ -238,8 +233,6 @@
     <button class="refresh-btn" onclick="loadAndRender()" title="Rafraîchir les données">🔄 Actualiser</button>
   </div>
 
-
-
   <!-- Calendrier 3 mois -->
   <div class="section-title">Calendrier — 3 derniers mois</div>
   <div class="calendar-grid" id="calendarGrid">
@@ -249,13 +242,31 @@
   <footer id="footer">—</footer>
 </div>
 
+<!-- ══ MODAL CONFIGURATION SUPABASE ══ -->
+<div id="configModal" class="modal-overlay">
+  <div class="lock-card" style="max-width: 440px; text-align: left;">
+    <h2 style="margin-bottom: 6px;">⚙️ Base de données privée</h2>
+    <p style="margin-bottom: 16px; font-size: 0.8rem; color: #94a3b8;">
+      Vos paramètres restent stockés <strong>uniquement sur votre appareil</strong> (jamais visibles sur GitHub).
+    </p>
+
+    <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px;">Supabase Project URL</label>
+    <input type="text" id="cfgSbUrl" class="lock-input" placeholder="https://xyz.supabase.co" />
+
+    <label style="font-size: 0.78rem; color: #94a3b8; display: block; margin-bottom: 4px;">Supabase Anon Public Key</label>
+    <input type="password" id="cfgSbKey" class="lock-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+
+    <div style="display: flex; gap: 10px; margin-top: 8px;">
+      <button class="lock-btn" onclick="saveConfig()">Enregistrer</button>
+      <button class="lock-btn" style="background: #334155;" onclick="closeConfigModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════
-//  MOT DE PASSE  (SHA-256 Web Crypto)
-//  Mot de passe par défaut : BaseCheck2024
-//  Pour changer : recalculez le hash sur
-//  https://emn178.github.io/online-tools/sha256.html
-//  et remplacez CORRECT_HASH ci-dessous.
+//  MOT DE PASSE (SHA-256 Web Crypto)
+//  Par défaut : BaseCheck2024
 // ══════════════════════════════════════════
 const UNLOCK_KEY = "basecheck_unlocked_v1";
 let resolvedHash = null;
@@ -302,7 +313,31 @@ async function checkAutoUnlock() {
 document.getElementById("pwdInput").addEventListener("keydown", e => { if (e.key==="Enter") tryUnlock(); });
 
 // ══════════════════════════════════════════
-//  HELPERS
+//  CONFIGURATION SUPABASE MODAL
+// ══════════════════════════════════════════
+function openConfigModal() {
+  document.getElementById("cfgSbUrl").value = localStorage.getItem("basecheck_sb_url") || "";
+  document.getElementById("cfgSbKey").value = localStorage.getItem("basecheck_sb_key") || "";
+  document.getElementById("configModal").style.display = "flex";
+}
+function closeConfigModal() {
+  document.getElementById("configModal").style.display = "none";
+}
+function saveConfig() {
+  const url = document.getElementById("cfgSbUrl").value.trim();
+  const key = document.getElementById("cfgSbKey").value.trim();
+  if (url && key) {
+    localStorage.setItem("basecheck_sb_url", url);
+    localStorage.setItem("basecheck_sb_key", key);
+    closeConfigModal();
+    loadAndRender();
+  } else {
+    alert("Veuillez renseigner l'URL et la clé Supabase.");
+  }
+}
+
+// ══════════════════════════════════════════
+//  HELPERS & RENDU
 // ══════════════════════════════════════════
 const LABEL = { ONLINE:"Base en ligne", BASE_OFFLINE:"Base hors-ligne", NO_INTERNET:"Pas d'accès Internet" };
 const COLOR = { ONLINE:"green", BASE_OFFLINE:"red", NO_INTERNET:"orange" };
@@ -310,14 +345,6 @@ const COLOR = { ONLINE:"green", BASE_OFFLINE:"red", NO_INTERNET:"orange" };
 function fmtTime(iso) {
   return new Date(iso).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
 }
-function fmtDuration(min) {
-  min = Math.round(min);
-  if (min < 60) return min + " min";
-  return Math.floor(min/60) + "h" + (min%60 ? (min%60) + "m" : "");
-}
-function minutesBetween(a, b) { return (new Date(b) - new Date(a)) / 60000; }
-
-// Clé locale d'un jour : "2026-10-18"
 function localDayKey(iso) {
   const d = new Date(iso);
   const y = d.getFullYear();
@@ -325,36 +352,11 @@ function localDayKey(iso) {
   const day = String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
-// Clé d'un mois : "2026-10"
-function monthKey(iso) { return localDayKey(iso).substring(0, 7); }
 
-// ══════════════════════════════════════════
-//  ANALYSE
-// ══════════════════════════════════════════
 function analyze(entries) {
-  const last   = entries[entries.length - 1];
-  const now    = new Date();
-  const ago24h = new Date(now - 24*3600*1000);
-  const ago30d = new Date(now - 30*24*3600*1000);
+  const last = entries[entries.length - 1];
+  const now = new Date();
 
-  const last24 = entries.filter(e => new Date(e.timestamp) >= ago24h);
-  const last30 = entries.filter(e => new Date(e.timestamp) >= ago30d);
-
-  // Stats 30j
-  const onN30 = last30.filter(e => e.status === "ONLINE").length;
-  const uptime30 = last30.length ? Math.round(100 * onN30 / last30.length) : 0;
-  let coupures = 0, totalCoup = 0, inCoup = false, coupStart = null;
-  for (const e of last30) {
-    const down = e.status !== "ONLINE";
-    if (down && !inCoup)  { inCoup = true; coupStart = e.timestamp; coupures++; }
-    if (!down &&  inCoup) { inCoup = false; totalCoup += minutesBetween(coupStart, e.timestamp); }
-  }
-  const avgCoup = coupures ? totalCoup / coupures : 0;
-
-  // Timeline 24h
-  const timeline = last24.map(e => e.status);
-
-  // ── Regroupement par jour ──
   const dayMap = {};
   for (const e of entries) {
     const k = localDayKey(e.timestamp);
@@ -362,11 +364,11 @@ function analyze(entries) {
     dayMap[k].push(e);
   }
 
-  // ── Calendrier : mois en cours + 2 précédents ──
+  // 3 derniers mois
   const months = [];
   for (let i = 0; i < 3; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({ year: d.getFullYear(), month: d.getMonth() }); // 0-based month
+    months.push({ year: d.getFullYear(), month: d.getMonth() });
   }
 
   const calData = months.map(({ year, month }) => {
@@ -375,31 +377,19 @@ function analyze(entries) {
 
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      // Skip future days
       if (date > now) continue;
 
-      const key = (() => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth()+1).padStart(2,"0");
-        const dd = String(date.getDate()).padStart(2,"0");
-        return `${y}-${m}-${dd}`;
-      })();
-
+      const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
       const es = dayMap[key] || [];
 
-      // Uptime du jour
       const uptime = es.length
         ? Math.round(100 * es.filter(e => e.status === "ONLINE").length / es.length)
         : null;
 
-      // Déterminer si "allumé" : au moins une entrée ONLINE dans le jour
       const hasOnline = es.some(e => e.status === "ONLINE");
-
-      // Premier allumage du jour = première entrée ONLINE
       const onlineEntries = es.filter(e => e.status === "ONLINE");
-      const firstOn  = onlineEntries.length ? onlineEntries[0].timestamp : null;
+      const firstOn = onlineEntries.length ? onlineEntries[0].timestamp : null;
 
-      // Dernier arrêt = dernière entrée non-ONLINE APRÈS la dernière entrée ONLINE
       let lastOff = null;
       if (onlineEntries.length) {
         const lastOnIdx = es.lastIndexOf(onlineEntries[onlineEntries.length - 1]);
@@ -408,32 +398,24 @@ function analyze(entries) {
         }
       }
 
-      // Est-ce aujourd'hui ?
       const isToday = key === localDayKey(now.toISOString());
-      // Est-ce weekend ?
-      const dow = date.getDay(); // 0=dim, 6=sam
+      const dow = date.getDay();
       const isWeekend = dow === 0 || dow === 6;
 
       days.push({ date, key, day: d, es, uptime, hasOnline, firstOn, lastOff, isToday, isWeekend });
     }
 
-    // Afficher les jours du plus récent au plus ancien (aujourd'hui en haut)
     days.reverse();
-
     const monthName = new Date(year, month, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
     return { year, month, monthName, days };
   });
 
-  return { last, uptime30, coupures, avgCoup, totalChecks: entries.length, timeline, calData };
+  return { last, calData };
 }
 
-// ══════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════
 function render(data) {
-  const { last, uptime30, coupures, avgCoup, totalChecks, timeline, calData } = data;
+  const { last, calData } = data;
 
-  // Statut actuel
   const col = COLOR[last.status] || "gray";
   document.getElementById("currentDot").className = "status-dot " + col;
   const hd = document.getElementById("headerDot");
@@ -442,7 +424,6 @@ function render(data) {
   document.getElementById("currentTime").textContent  =
     "Dernière vérification : " + new Date(last.timestamp).toLocaleString("fr-FR");
 
-  // ── Calendrier 3 mois ──
   const grid = document.getElementById("calendarGrid");
   grid.innerHTML = "";
 
@@ -450,7 +431,6 @@ function render(data) {
     const block = document.createElement("div");
     block.className = "month-block";
 
-    // En-tête du mois
     const hdr = document.createElement("div");
     hdr.className = "month-header";
     hdr.textContent = mon.monthName.charAt(0).toUpperCase() + mon.monthName.slice(1);
@@ -465,11 +445,8 @@ function render(data) {
       continue;
     }
 
-    // Tableau de jours
     const tbl = document.createElement("table");
     tbl.className = "month-table";
-
-    // Thead
     tbl.innerHTML = `<thead><tr>
       <th>Jour</th>
       <th>Statut</th>
@@ -483,14 +460,12 @@ function render(data) {
     for (const day of mon.days) {
       const tr = document.createElement("tr");
 
-      // ── Date ──
       const dateLabel = day.date.toLocaleDateString("fr-FR", { weekday:"short", day:"2-digit" });
       const tdDate = document.createElement("td");
       tdDate.className = "td-date" + (day.isToday ? " today" : day.isWeekend ? " weekend" : "");
       tdDate.textContent = dateLabel + (day.isToday ? " ★" : "");
       tr.appendChild(tdDate);
 
-      // ── Statut (dot) ──
       const tdStatus = document.createElement("td");
       if (!day.es.length) {
         tdStatus.innerHTML = '<span class="day-dot gray"></span><span style="color:#334155;font-size:0.76rem">—</span>';
@@ -501,30 +476,22 @@ function render(data) {
       }
       tr.appendChild(tdStatus);
 
-      // ── Premier allumage ──
       const tdOn = document.createElement("td");
       tdOn.className = "td-times";
-      if (day.firstOn) {
-        tdOn.innerHTML = `<span class="time-on">▲ ${fmtTime(day.firstOn)}</span>`;
-      } else {
-        tdOn.innerHTML = `<span class="no-data">—</span>`;
-      }
+      tdOn.innerHTML = day.firstOn ? `<span class="time-on">▲ ${fmtTime(day.firstOn)}</span>` : `<span class="no-data">—</span>`;
       tr.appendChild(tdOn);
 
-      // ── Dernier arrêt ──
       const tdOff = document.createElement("td");
       tdOff.className = "td-times";
       if (day.lastOff) {
         tdOff.innerHTML = `<span class="time-off">▼ ${fmtTime(day.lastOff)}</span>`;
       } else if (day.hasOnline && !day.lastOff) {
-        // Toujours en ligne à la fin du jour (ou aujourd'hui)
         tdOff.innerHTML = `<span style="color:#64748b;font-size:0.76rem">${day.isToday ? "En cours" : "Toute la journée"}</span>`;
       } else {
         tdOff.innerHTML = `<span class="no-data">—</span>`;
       }
       tr.appendChild(tdOff);
 
-      // ── Uptime barre ──
       const tdUp = document.createElement("td");
       tdUp.className = "td-uptime";
       if (day.uptime !== null) {
@@ -546,26 +513,44 @@ function render(data) {
   }
 
   document.getElementById("footer").textContent =
-    "BaseCheck · Heures en heure locale · Rafraîchi le " + new Date().toLocaleString("fr-FR");
+    "BaseCheck · Données privées Supabase · Rafraîchi le " + new Date().toLocaleString("fr-FR");
 }
 
 // ══════════════════════════════════════════
-//  CHARGEMENT
+//  CHARGEMENT DEPUIS SUPABASE
 // ══════════════════════════════════════════
 async function loadAndRender() {
+  const sbUrl = localStorage.getItem("basecheck_sb_url");
+  const sbKey = localStorage.getItem("basecheck_sb_key");
+
+  if (!sbUrl || !sbKey) {
+    document.getElementById("currentLabel").textContent = "Connexion requise";
+    document.getElementById("currentTime").textContent = "Cliquez sur ⚙️ Config pour renseigner vos identifiants Supabase.";
+    document.getElementById("calendarGrid").innerHTML =
+      '<div style="text-align:center;color:#94a3b8;padding:32px">Veuillez renseigner votre URL et clé Supabase via le bouton <strong>⚙️ Config</strong> en haut à droite.</div>';
+    return;
+  }
+
   try {
-    const resp = await fetch("data/log.json?t=" + Date.now());
-    if (!resp.ok) throw new Error("Impossible de charger log.json");
-    const entries = await resp.json();
+    const url = `${sbUrl.replace(/\/+$/, "")}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=4500`;
+    const resp = await fetch(url, {
+      headers: {
+        "apikey": sbKey,
+        "Authorization": `Bearer ${sbKey}`
+      }
+    });
+    if (!resp.ok) throw new Error("Erreur HTTP Supabase (" + resp.status + ")");
+    const raw = await resp.json();
+    const entries = raw.map(e => ({ status: e.status, timestamp: e.created_at })).reverse();
     if (!entries.length) {
-      document.getElementById("currentLabel").textContent = "Aucune donnée encore";
+      document.getElementById("currentLabel").textContent = "Aucune donnée";
       document.getElementById("calendarGrid").innerHTML =
-        '<div style="text-align:center;color:#475569;padding:32px">Aucune vérification effectuée pour l\'instant.<br>Le système se lancera automatiquement dans quelques minutes.</div>';
+        '<div style="text-align:center;color:#475569;padding:32px">Aucun enregistrement trouvé dans la table Supabase.</div>';
       return;
     }
     render(analyze(entries));
   } catch (e) {
-    document.getElementById("currentLabel").textContent = "Erreur de chargement";
+    document.getElementById("currentLabel").textContent = "Erreur Supabase";
     document.getElementById("currentTime").textContent  = e.message;
     console.error(e);
   }

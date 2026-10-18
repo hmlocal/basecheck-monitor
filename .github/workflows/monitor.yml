@@ -6,9 +6,6 @@ on:
     - cron: "*/30 * * * *"
   workflow_dispatch:   # Permet de lancer manuellement depuis GitHub si besoin
 
-permissions:
-  contents: write      # Autorisation d'écrire dans le repo (commit log.json)
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -18,25 +15,18 @@ jobs:
       - name: Cloner le dépôt
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1       # Juste le dernier commit, rapide
+          fetch-depth: 1
 
       - name: Configurer Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Vérifier la base NTRIP
+      - name: Vérifier la base NTRIP et enregistrer dans Supabase
         run: python check.py
         env:
           NTRIP_HOST:       ${{ secrets.NTRIP_HOST }}
           NTRIP_PORT:       ${{ secrets.NTRIP_PORT }}
           NTRIP_MOUNTPOINT: ${{ secrets.NTRIP_MOUNTPOINT }}
-
-      - name: Commiter et pousser le journal mis à jour
-        run: |
-          git config user.name  "BaseCheck Bot"
-          git config user.email "basecheck-bot@noreply.github.com"
-          git add data/log.json
-          # Ne commite que s'il y a une modification
-          git diff --cached --quiet || git commit -m "check: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git push
+          SUPABASE_URL:     ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:     ${{ secrets.SUPABASE_KEY }}
