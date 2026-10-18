@@ -450,6 +450,9 @@ function analyze(entries) {
       days.push({ date, key, day: d, es, uptime, hasOnline, firstOn, lastOff, isToday, isWeekend });
     }
 
+    // Afficher les jours du plus récent au plus ancien (aujourd'hui en haut)
+    days.reverse();
+
     const monthName = new Date(year, month, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
     return { year, month, monthName, days };
   });
