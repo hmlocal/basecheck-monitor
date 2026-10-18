@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BaseCheck — Connexion</title>
+  <title>Attachement automatique — Connexion</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -211,7 +211,7 @@
 <div id="lockScreen">
   <div class="lock-card">
     <div class="lock-icon">🔒</div>
-    <h2>Base Check</h2>
+    <h2>Attachement automatique</h2>
     <p>Entrez le mot de passe pour accéder au tableau de bord.</p>
     <input type="password" id="pwdInput" class="lock-input"
            placeholder="Mot de passe" autocomplete="current-password" />
@@ -227,8 +227,8 @@
 <!-- ══ DASHBOARD ══ -->
 <div id="dashboard">
   <header>
-    <h1><span class="dot-header" id="headerDot"></span>Base Check</h1>
-    <p class="subtitle">Surveillance NTRIP automatique</p>
+    <h1><span class="dot-header" id="headerDot"></span>Attachement automatique</h1>
+    <p class="subtitle">Surveillance (30min)</p>
     <div class="header-actions">
       <button class="logout-btn" onclick="logout()">🔒 Verrouiller</button>
     </div>
@@ -295,7 +295,7 @@ function logout() {
 function showDashboard() {
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
-  document.title = "BaseCheck — Surveillance NTRIP";
+  document.title = "Attachement automatique";
   loadAndRender();
 }
 async function checkAutoUnlock() {
@@ -310,7 +310,7 @@ document.getElementById("pwdInput").addEventListener("keydown", e => { if (e.key
 // ══════════════════════════════════════════
 //  HELPERS & RENDU
 // ══════════════════════════════════════════
-const LABEL = { ONLINE:"Base en ligne", BASE_OFFLINE:"Base hors-ligne", NO_INTERNET:"Pas d'accès Internet" };
+const LABEL = { ONLINE:"en ligne", BASE_OFFLINE:"hors-ligne", NO_INTERNET:"pas d'accès internet" };
 const COLOR = { ONLINE:"green", BASE_OFFLINE:"red", NO_INTERNET:"orange" };
 
 function fmtTime(iso) {
