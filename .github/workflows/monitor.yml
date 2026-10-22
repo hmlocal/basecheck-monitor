@@ -2,14 +2,19 @@ name: BaseCheck Monitor
 
 on:
   schedule:
-    # Toutes les 30 minutes
-    - cron: "*/30 * * * *"
+    # Déclenchement toutes les 30 minutes (relais automatique et chien de garde)
+    - cron: "0,30 * * * *"
   workflow_dispatch:   # Permet de lancer manuellement depuis GitHub si besoin
+
+# Évite les exécutions en double : un seul runner actif à la fois
+concurrency:
+  group: basecheck-monitor
+  cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 60
 
     steps:
       - name: Cloner le dépôt
@@ -22,7 +27,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Vérifier la base NTRIP et enregistrer dans Supabase
+      - name: Surveillance continue et chien de garde
         run: python check.py
         env:
           NTRIP_HOST:       ${{ secrets.NTRIP_HOST }}
