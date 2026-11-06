@@ -234,6 +234,27 @@
     .td-times .time-off { color: #f87171; }
     .td-times .no-data { color: #334155; font-style: italic; }
 
+    .td-remarque {
+      min-width: 170px; max-width: 320px; padding: 4px 10px !important;
+    }
+    .remarque-input {
+      width: 100%; box-sizing: border-box;
+      background: #101420; border: 1px solid #1e2536;
+      border-radius: 4px; padding: 4px 8px;
+      color: #e2e8f0; font-size: 0.78rem;
+      transition: all 0.2s; outline: none;
+    }
+    .remarque-input:hover {
+      border-color: #334155; background: #151a29;
+    }
+    .remarque-input:focus {
+      border-color: #3b82f6; background: #0c101a;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+    .remarque-input::placeholder {
+      color: #475569; font-style: italic; font-size: 0.74rem;
+    }
+
     footer {
       text-align: center; color: #334155;
       font-size: 0.72rem; margin-top: 12px;
@@ -354,8 +375,10 @@ document.getElementById("pwdInput").addEventListener("keydown", e => { if (e.key
 const LABEL = { ONLINE:"en ligne", BASE_OFFLINE:"hors-ligne", NO_INTERNET:"pas d'accès internet" };
 const COLOR = { ONLINE:"green", BASE_OFFLINE:"red", NO_INTERNET:"orange" };
 
-function fmtTime(iso) {
-  return new Date(iso).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+function fmtTime(val) {
+  if (!val) return "—";
+  if (typeof val === "string" && val.length === 5 && val.includes(":")) return val;
+  return new Date(val).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
 }
 function fmtTimeFull(iso) {
   return new Date(iso).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
@@ -367,16 +390,17 @@ function localDayKey(iso) {
   const day = String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
+function escapeHtml(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
-function analyze(entries) {
-  const last = entries[entries.length - 1];
+function analyzeSummaries(summaries, last) {
   const now = new Date();
 
-  const dayMap = {};
-  for (const e of entries) {
-    const k = localDayKey(e.timestamp);
-    if (!dayMap[k]) dayMap[k] = [];
-    dayMap[k].push(e);
+  // Indexation des synthèses par date YYYY-MM-DD
+  const summaryMap = {};
+  for (const s of summaries) {
+    summaryMap[s.date] = s;
   }
 
   // 3 derniers mois
@@ -395,29 +419,20 @@ function analyze(entries) {
       if (date > now) continue;
 
       const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-      const es = dayMap[key] || [];
+      const sum = summaryMap[key];
 
-      const uptime = es.length
-        ? Math.round(100 * es.filter(e => e.status === "ONLINE").length / es.length)
-        : null;
-
-      const hasOnline = es.some(e => e.status === "ONLINE");
-      const onlineEntries = es.filter(e => e.status === "ONLINE");
-      const firstOn = onlineEntries.length ? onlineEntries[0].timestamp : null;
-
-      let lastOff = null;
-      if (onlineEntries.length) {
-        const lastOnIdx = es.lastIndexOf(onlineEntries[onlineEntries.length - 1]);
-        for (let i = lastOnIdx + 1; i < es.length; i++) {
-          if (es[i].status !== "ONLINE") { lastOff = es[i].timestamp; break; }
-        }
-      }
+      const hasData = !!sum;
+      const hasOnline = sum ? (sum.status === "ONLINE") : false;
+      const firstOn = sum ? sum.first_on : null;
+      const lastOff = sum ? sum.last_off : null;
+      const checksCount = sum ? (sum.checks_count || 0) : 0;
+      const remarque = (sum && sum.remarque) ? sum.remarque : "";
 
       const isToday = key === localDayKey(now.toISOString());
       const dow = date.getDay();
       const isWeekend = dow === 0 || dow === 6;
 
-      days.push({ date, key, day: d, es, uptime, hasOnline, firstOn, lastOff, isToday, isWeekend });
+      days.push({ date, key, day: d, hasData, hasOnline, firstOn, lastOff, checksCount, remarque, isToday, isWeekend });
     }
 
     days.reverse();
@@ -483,6 +498,7 @@ function render(data) {
       <th>Statut</th>
       <th>Premier allumage</th>
       <th>Dernier arrêt</th>
+      <th>Remarque</th>
     </tr></thead>`;
 
     const tbody = document.createElement("tbody");
@@ -500,7 +516,7 @@ function render(data) {
       tr.appendChild(tdDate);
 
       const tdStatus = document.createElement("td");
-      if (!day.es.length) {
+      if (!day.hasData) {
         tdStatus.innerHTML = '<span class="day-dot gray"></span><span style="color:#334155;font-size:0.76rem">—</span>';
       } else if (day.hasOnline) {
         tdStatus.innerHTML = '<span class="day-dot green"></span><span style="color:#4ade80;font-size:0.76rem">En ligne</span>';
@@ -525,61 +541,59 @@ function render(data) {
       }
       tr.appendChild(tdOff);
 
+      // Colonne Remarque directement éditable
+      const tdRem = document.createElement("td");
+      tdRem.className = "td-remarque";
+
+      const remInput = document.createElement("input");
+      remInput.type = "text";
+      remInput.className = "remarque-input";
+      remInput.placeholder = "Ajouter une note...";
+      remInput.value = day.remarque || "";
+      remInput.dataset.key = day.key;
+      remInput.title = "Modifiez votre note pour cette journée (sauvegarde automatique)";
+
+      // Empêcher le clic ou la sélection dans l'input d'ouvrir/fermer l'accordéon
+      remInput.addEventListener("click", e => e.stopPropagation());
+      remInput.addEventListener("mousedown", e => e.stopPropagation());
+      remInput.addEventListener("keydown", e => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+          remInput.blur();
+        }
+      });
+      remInput.addEventListener("change", (e) => {
+        saveRemarque(day.key, e.target.value.trim(), remInput);
+      });
+
+      tdRem.appendChild(remInput);
+      tr.appendChild(tdRem);
+
       tbody.appendChild(tr);
 
-      // Ligne de détail déroulante (accordéon)
+      // Ligne de détail déroulante (accordéon avec lazy-loading)
       const trDetail = document.createElement("tr");
       trDetail.className = "detail-row";
       trDetail.id = "detail-" + day.key;
 
       const tdDetail = document.createElement("td");
-      tdDetail.colSpan = 4;
+      tdDetail.colSpan = 5;
 
       const fullDateStr = day.date.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
-      let detailContent = `
+      tdDetail.innerHTML = `
         <div class="detail-container">
           <div class="detail-header-info">
-            📋 Vérifications du ${fullDateStr} (${day.es.length} test${day.es.length > 1 ? "s" : ""})
-          </div>`;
+            📋 Vérifications du ${fullDateStr} ${day.checksCount ? `(${day.checksCount} test${day.checksCount > 1 ? "s" : ""})` : ""}
+          </div>
+          <div id="detail-content-${day.key}">
+            <div style="color:#64748b;font-size:0.78rem;font-style:italic;padding:4px 0;">Cliquez sur la ligne pour afficher les vérifications.</div>
+          </div>
+        </div>`;
 
-      if (day.es.length === 0) {
-        detailContent += `<div style="color:#64748b;font-size:0.78rem;font-style:italic;padding:4px 0;">Aucune vérification enregistrée pour cette journée.</div>`;
-      } else {
-        detailContent += `
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th>Heure (GMT+1)</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-        for (const e of day.es) {
-          const timeStr = fmtTimeFull(e.timestamp);
-          const st = e.status;
-          const dotClass = st === "ONLINE" ? "green" : st === "BASE_OFFLINE" ? "red" : st === "NO_INTERNET" ? "orange" : "gray";
-          const stLabel = st === "ONLINE" ? "En ligne" : st === "BASE_OFFLINE" ? "Hors-ligne" : st === "NO_INTERNET" ? "Pas d'accès internet" : st;
-          const stColor = st === "ONLINE" ? "#4ade80" : st === "BASE_OFFLINE" ? "#f87171" : "#fb923c";
-
-          detailContent += `
-              <tr>
-                <td style="font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:0.3px;">${timeStr}</td>
-                <td><span class="day-dot ${dotClass}"></span><span style="color:${stColor};font-size:0.76rem;">${stLabel}</span></td>
-              </tr>`;
-        }
-
-        detailContent += `
-            </tbody>
-          </table>`;
-      }
-
-      detailContent += `</div>`;
-      tdDetail.innerHTML = detailContent;
       trDetail.appendChild(tdDetail);
       tbody.appendChild(trDetail);
 
-      // Clic pour dérouler / replier (si on ouvre l'un, l'autre se ferme)
+      // Clic sur la ligne pour dérouler / replier
       tr.addEventListener("click", () => toggleDayDetail(day.key));
     }
 
@@ -593,10 +607,47 @@ function render(data) {
 }
 
 // ══════════════════════════════════════════
-//  ACCORDÉON : DÉTAIL D'UNE JOURNÉE
+//  ENREGISTREMENT D'UNE REMARQUE DANS SUPABASE
+// ══════════════════════════════════════════
+async function saveRemarque(dateKey, newText, inputEl) {
+  const sbUrl = "https://swrspopzrvlqeqgjrjnk.supabase.co";
+  const sbKey = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
+
+  try {
+    inputEl.style.borderColor = "#eab308"; // Jaune = sauvegarde en cours
+    const resp = await fetch(`${sbUrl}/rest/v1/daily_summary?date=eq.${dateKey}`, {
+      method: "PATCH",
+      headers: {
+        "apikey": sbKey,
+        "Authorization": `Bearer ${sbKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        remarque: newText,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (!resp.ok) throw new Error("Code HTTP " + resp.status);
+
+    inputEl.style.borderColor = "#22c55e"; // Vert = validé
+    setTimeout(() => {
+      inputEl.style.borderColor = "";
+    }, 1500);
+  } catch (err) {
+    console.error("Erreur enregistrement remarque:", err);
+    inputEl.style.borderColor = "#ef4444"; // Rouge = erreur
+    alert("Impossible d'enregistrer la remarque : " + err.message);
+  }
+}
+
+// ══════════════════════════════════════════
+//  ACCORDÉON : DÉTAIL D'UNE JOURNÉE (LAZY-LOAD)
 //  Règle : un seul jour ouvert à la fois
 // ══════════════════════════════════════════
-function toggleDayDetail(key) {
+const detailsCache = {};
+
+async function toggleDayDetail(key) {
   const detailRow = document.getElementById("detail-" + key);
   const dayRow = document.querySelector(`.day-row[data-key="${key}"]`);
   if (!detailRow || !dayRow) return;
@@ -607,15 +658,77 @@ function toggleDayDetail(key) {
   document.querySelectorAll(".detail-row.open").forEach(el => el.classList.remove("open"));
   document.querySelectorAll(".day-row.expanded").forEach(el => el.classList.remove("expanded"));
 
-  // Si la ligne n'était pas ouverte, on l'ouvre
   if (!isCurrentlyOpen) {
     detailRow.classList.add("open");
     dayRow.classList.add("expanded");
+
+    // Charger les détails du jour si pas encore chargés
+    const container = document.getElementById("detail-content-" + key);
+    if (container && !detailsCache[key]) {
+      container.innerHTML = '<div style="color:#60a5fa;font-size:0.8rem;padding:8px 0;">⏳ Chargement des vérifications en cours...</div>';
+      try {
+        const sbUrl = "https://swrspopzrvlqeqgjrjnk.supabase.co";
+        const sbKey = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
+
+        // Délimitation stricte du jour en GMT+1
+        const startIso = `${key}T00:00:00+01:00`;
+        const endIso = `${key}T23:59:59+01:00`;
+        const url = `${sbUrl}/rest/v1/base_checks?created_at=gte.${encodeURIComponent(startIso)}&created_at=lte.${encodeURIComponent(endIso)}&select=status,created_at&order=created_at.asc`;
+
+        const resp = await fetch(url, {
+          headers: {
+            "apikey": sbKey,
+            "Authorization": `Bearer ${sbKey}`
+          }
+        });
+
+        if (!resp.ok) throw new Error("Erreur HTTP Supabase (" + resp.status + ")");
+        const checks = await resp.json();
+        detailsCache[key] = checks;
+        renderDetailContent(checks, container);
+      } catch (err) {
+        container.innerHTML = `<div style="color:#f87171;font-size:0.78rem;">Erreur de chargement : ${err.message}</div>`;
+      }
+    }
   }
 }
 
+function renderDetailContent(checks, container) {
+  if (!checks || checks.length === 0) {
+    container.innerHTML = `<div style="color:#64748b;font-size:0.78rem;font-style:italic;padding:4px 0;">Aucune vérification enregistrée pour cette journée.</div>`;
+    return;
+  }
+
+  let html = `
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>Heure (GMT+1)</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  for (const c of checks) {
+    const timeStr = fmtTimeFull(c.created_at);
+    const st = c.status;
+    const dotClass = st === "ONLINE" ? "green" : st === "BASE_OFFLINE" ? "red" : st === "NO_INTERNET" ? "orange" : "gray";
+    const stLabel = st === "ONLINE" ? "En ligne" : st === "BASE_OFFLINE" ? "Hors-ligne" : st === "NO_INTERNET" ? "Pas d'accès internet" : st;
+    const stColor = st === "ONLINE" ? "#4ade80" : st === "BASE_OFFLINE" ? "#f87171" : "#fb923c";
+
+    html += `
+      <tr>
+        <td style="font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:0.3px;">${timeStr}</td>
+        <td><span class="day-dot ${dotClass}"></span><span style="color:${stColor};font-size:0.76rem;">${stLabel}</span></td>
+      </tr>`;
+  }
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
 // ══════════════════════════════════════════
-//  EXPORT CSV D'UN MOIS
+//  EXPORT CSV D'UN MOIS (AVEC REMARQUES)
 // ══════════════════════════════════════════
 function exportMonthCSV(mon) {
   if (!mon || !mon.days || !mon.days.length) {
@@ -624,7 +737,7 @@ function exportMonthCSV(mon) {
   }
 
   // En-têtes CSV
-  const headers = ["Jour", "Date", "Statut", "Premier allumage", "Dernier arret"];
+  const headers = ["Jour", "Date", "Statut", "Premier allumage", "Dernier arret", "Remarque"];
   const rows = [headers];
 
   // Tri chronologique du 1er au dernier jour du mois
@@ -634,7 +747,7 @@ function exportMonthCSV(mon) {
     const dayName = day.date.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit" });
     const dateStr = day.key;
     let statusText = "Aucune donnee";
-    if (day.es.length > 0) {
+    if (day.hasData) {
       statusText = day.hasOnline ? "En ligne" : "Hors-ligne";
     }
     const firstOn = day.firstOn ? fmtTime(day.firstOn) : "—";
@@ -644,13 +757,15 @@ function exportMonthCSV(mon) {
     } else if (day.hasOnline && !day.lastOff) {
       lastOff = day.isToday ? "En cours" : "Toute la journee";
     }
+    const safeRemarque = (day.remarque || "").replace(/"/g, '""');
 
     rows.push([
       `"${dayName}"`,
       `"${dateStr}"`,
       `"${statusText}"`,
       `"${firstOn}"`,
-      `"${lastOff}"`
+      `"${lastOff}"`,
+      `"${safeRemarque}"`
     ]);
   }
 
@@ -669,44 +784,36 @@ function exportMonthCSV(mon) {
 }
 
 // ══════════════════════════════════════════
-//  CHARGEMENT DEPUIS SUPABASE
+//  CHARGEMENT ULTRA-RAPIDE DEPUIS SUPABASE
 // ══════════════════════════════════════════
 async function loadAndRender() {
   const sbUrl = "https://swrspopzrvlqeqgjrjnk.supabase.co";
   const sbKey = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
 
   try {
-    let allRaw = [];
-    let offset = 0;
-    const batchSize = 1000;
-    const maxEntries = 6000; // Couvre largement les 3 mois d'historique
+    // Requêtes parallèles :
+    // 1. Le tout dernier check pour le bandeau supérieur en temps réel
+    // 2. Les synthèses quotidiennes (daily_summary) pour le tableau
+    const [respLast, respSummaries] = await Promise.all([
+      fetch(`${sbUrl}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=1`, {
+        headers: { "apikey": sbKey, "Authorization": `Bearer ${sbKey}` }
+      }),
+      fetch(`${sbUrl}/rest/v1/daily_summary?select=*&order=date.desc&limit=120`, {
+        headers: { "apikey": sbKey, "Authorization": `Bearer ${sbKey}` }
+      })
+    ]);
 
-    // Supabase limite chaque requête à 1000 lignes max (max-rows).
-    // On pagine avec offset pour récupérer l'intégralité des données sans coupure.
-    while (allRaw.length < maxEntries) {
-      const url = `${sbUrl.replace(/\/+$/, "")}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=${batchSize}&offset=${offset}`;
-      const resp = await fetch(url, {
-        headers: {
-          "apikey": sbKey,
-          "Authorization": `Bearer ${sbKey}`
-        }
-      });
-      if (!resp.ok) throw new Error("Erreur HTTP Supabase (" + resp.status + ")");
-      const raw = await resp.json();
-      if (!raw || raw.length === 0) break;
-      allRaw = allRaw.concat(raw);
-      if (raw.length < batchSize) break; // Fin des données atteinte
-      offset += batchSize;
-    }
+    if (!respLast.ok) throw new Error("Erreur statut temps réel (" + respLast.status + ")");
+    if (!respSummaries.ok) throw new Error("Erreur synthèses (" + respSummaries.status + ")");
 
-    const entries = allRaw.map(e => ({ status: e.status, timestamp: e.created_at })).reverse();
-    if (!entries.length) {
-      document.getElementById("currentLabel").textContent = "Aucune donnée";
-      document.getElementById("calendarGrid").innerHTML =
-        '<div style="text-align:center;color:#475569;padding:32px">Aucun enregistrement trouvé dans la table Supabase.</div>';
-      return;
-    }
-    render(analyze(entries));
+    const rawLast = await respLast.json();
+    const summaries = await respSummaries.json();
+
+    const last = (rawLast && rawLast.length)
+      ? { status: rawLast[0].status, timestamp: rawLast[0].created_at }
+      : { status: "BASE_OFFLINE", timestamp: new Date().toISOString() };
+
+    render(analyzeSummaries(summaries, last));
   } catch (e) {
     document.getElementById("currentLabel").textContent = "Erreur Supabase";
     document.getElementById("currentTime").textContent  = e.message;

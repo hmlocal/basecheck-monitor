@@ -134,9 +134,96 @@ def save_to_supabase(result: dict) -> bool:
             inserted_id = data[0]["id"] if data else None
             result["inserted_id"] = inserted_id
             print(f"[BaseCheck] Enregistré dans Supabase (ID: {inserted_id}, Status: {resp.status})")
+            # Mettre à jour la synthèse quotidienne dans daily_summary
+            update_daily_summary()
             return True
     except Exception as e:
         print(f"[BaseCheck] Erreur enregistrement Supabase: {e}")
+        return False
+
+
+def update_daily_summary() -> bool:
+    """
+    Calcule et met à jour la ligne du jour dans daily_summary.
+    Préserve intégralement la colonne 'remarque' renseignée depuis l'interface web.
+    """
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return False
+
+    try:
+        now_utc = datetime.now(timezone.utc)
+        today_gmt1_str = now_utc.astimezone(TZ_GMT1).strftime("%Y-%m-%d")
+
+        # Récupérer les derniers checks (150 couvrent largement 24h)
+        url_get = f"{SUPABASE_URL.rstrip('/')}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=150"
+        headers_get = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}"
+        }
+        req_get = urllib.request.Request(url_get, headers=headers_get)
+        with urllib.request.urlopen(req_get, timeout=10) as resp:
+            rows = json.loads(resp.read().decode())
+
+        today_entries = []
+        for r in rows:
+            ts = r["created_at"].strip()
+            if ts.endswith("+00"):
+                ts = ts[:-3] + "+00:00"
+            dt_utc = datetime.fromisoformat(ts)
+            dt_gmt1 = dt_utc.astimezone(TZ_GMT1)
+            if dt_gmt1.strftime("%Y-%m-%d") == today_gmt1_str:
+                today_entries.append({
+                    "status": r["status"],
+                    "dt_gmt1": dt_gmt1
+                })
+
+        if not today_entries:
+            return False
+
+        # Tri chronologique pour déterminer premier allumage et dernier arrêt
+        today_entries.sort(key=lambda x: x["dt_gmt1"])
+        online_entries = [e for e in today_entries if e["status"] == "ONLINE"]
+        has_online = len(online_entries) > 0
+        day_status = "ONLINE" if has_online else "BASE_OFFLINE"
+
+        first_on = None
+        last_off = None
+        if has_online:
+            first_on = online_entries[0]["dt_gmt1"].strftime("%H:%M")
+            last_on_idx = -1
+            for idx in range(len(today_entries) - 1, -1, -1):
+                if today_entries[idx]["status"] == "ONLINE":
+                    last_on_idx = idx
+                    break
+            if last_on_idx != -1:
+                for idx in range(last_on_idx + 1, len(today_entries)):
+                    if today_entries[idx]["status"] != "ONLINE":
+                        last_off = today_entries[idx]["dt_gmt1"].strftime("%H:%M")
+                        break
+
+        # Upsert dans daily_summary (merge-duplicates ne touche pas à 'remarque' si absente du payload)
+        url_post = f"{SUPABASE_URL.rstrip('/')}/rest/v1/daily_summary"
+        headers_post = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates"
+        }
+        payload = json.dumps({
+            "date": today_gmt1_str,
+            "status": day_status,
+            "first_on": first_on,
+            "last_off": last_off,
+            "checks_count": len(today_entries),
+            "updated_at": now_utc.isoformat()
+        }).encode("utf-8")
+
+        req_post = urllib.request.Request(url_post, data=payload, headers=headers_post, method="POST")
+        with urllib.request.urlopen(req_post, timeout=10) as resp:
+            print(f"[BaseCheck] daily_summary mis à jour pour {today_gmt1_str} (Checks: {len(today_entries)}, On: {first_on}, Off: {last_off})")
+            return True
+    except Exception as e:
+        print(f"[BaseCheck] Erreur mise à jour daily_summary: {e}")
         return False
 
 
