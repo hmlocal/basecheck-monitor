@@ -676,16 +676,30 @@ async function loadAndRender() {
   const sbKey = "sb_publishable_TYARdL7zrPN7fUqz1Wm1Zg_i0cBWjv1";
 
   try {
-    const url = `${sbUrl.replace(/\/+$/, "")}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=4500`;
-    const resp = await fetch(url, {
-      headers: {
-        "apikey": sbKey,
-        "Authorization": `Bearer ${sbKey}`
-      }
-    });
-    if (!resp.ok) throw new Error("Erreur HTTP Supabase (" + resp.status + ")");
-    const raw = await resp.json();
-    const entries = raw.map(e => ({ status: e.status, timestamp: e.created_at })).reverse();
+    let allRaw = [];
+    let offset = 0;
+    const batchSize = 1000;
+    const maxEntries = 6000; // Couvre largement les 3 mois d'historique
+
+    // Supabase limite chaque requête à 1000 lignes max (max-rows).
+    // On pagine avec offset pour récupérer l'intégralité des données sans coupure.
+    while (allRaw.length < maxEntries) {
+      const url = `${sbUrl.replace(/\/+$/, "")}/rest/v1/base_checks?select=status,created_at&order=created_at.desc&limit=${batchSize}&offset=${offset}`;
+      const resp = await fetch(url, {
+        headers: {
+          "apikey": sbKey,
+          "Authorization": `Bearer ${sbKey}`
+        }
+      });
+      if (!resp.ok) throw new Error("Erreur HTTP Supabase (" + resp.status + ")");
+      const raw = await resp.json();
+      if (!raw || raw.length === 0) break;
+      allRaw = allRaw.concat(raw);
+      if (raw.length < batchSize) break; // Fin des données atteinte
+      offset += batchSize;
+    }
+
+    const entries = allRaw.map(e => ({ status: e.status, timestamp: e.created_at })).reverse();
     if (!entries.length) {
       document.getElementById("currentLabel").textContent = "Aucune donnée";
       document.getElementById("calendarGrid").innerHTML =
