@@ -421,7 +421,7 @@ function analyzeSummaries(summaries, last) {
       const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
       const sum = summaryMap[key];
 
-      const hasData = !!sum;
+      const hasData = !!sum && sum.status !== "NO_DATA";
       const hasOnline = sum ? (sum.status === "ONLINE") : false;
       const firstOn = sum ? sum.first_on : null;
       const lastOff = sum ? sum.last_off : null;
@@ -620,7 +620,8 @@ async function saveRemarque(dateKey, newText, inputEl) {
       headers: {
         "apikey": sbKey,
         "Authorization": `Bearer ${sbKey}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
       },
       body: JSON.stringify({
         remarque: newText,
@@ -629,6 +630,27 @@ async function saveRemarque(dateKey, newText, inputEl) {
     });
 
     if (!resp.ok) throw new Error("Code HTTP " + resp.status);
+
+    const patched = await resp.json();
+    if (!patched || patched.length === 0) {
+      // La ligne n'existait pas encore dans daily_summary (ex: jour avant le début des checks)
+      const respPost = await fetch(`${sbUrl}/rest/v1/daily_summary`, {
+        method: "POST",
+        headers: {
+          "apikey": sbKey,
+          "Authorization": `Bearer ${sbKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          date: dateKey,
+          status: "NO_DATA",
+          checks_count: 0,
+          remarque: newText,
+          updated_at: new Date().toISOString()
+        })
+      });
+      if (!respPost.ok) throw new Error("Code HTTP insert " + respPost.status);
+    }
 
     inputEl.style.borderColor = "#22c55e"; // Vert = validé
     setTimeout(() => {
